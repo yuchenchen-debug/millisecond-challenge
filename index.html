@@ -8,7 +8,11 @@
 <meta property="og:title" content="千分之一秒 — 你是前幾%？">
 <meta property="og:description" content="只有 0.01% 的人能拿到 SSS 級。測試你的時間感極限！">
 <meta property="og:type" content="website">
+<meta property="og:image" content="og-image.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="og-image.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
@@ -205,6 +209,110 @@ body{
 .diff-hard{background:rgba(255,107,0,.15);color:#ff6b00}
 .diff-extreme{background:rgba(255,45,85,.15);color:var(--accent2)}
 .diff-impossible{background:rgba(255,45,85,.25);color:#ff0040;animation:pulse 1.5s infinite}
+
+/* ===== LEADERBOARD MODAL ===== */
+.lb-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.8);backdrop-filter:blur(8px);
+  z-index:300;display:none;align-items:center;justify-content:center;
+}
+.lb-overlay.open{display:flex}
+
+.lb-modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;width:94%;max-width:440px;
+  max-height:85vh;display:flex;flex-direction:column;
+  overflow:hidden;animation:modalIn .25s ease-out;
+}
+@keyframes modalIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+
+.lb-header{
+  padding:20px 20px 12px;text-align:center;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.lb-header h2{
+  font-size:20px;font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.lb-header .lb-sub{font-size:12px;color:var(--dim);margin-top:4px}
+
+.lb-body{
+  overflow-y:auto;padding:12px 16px 16px;flex:1;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.lb-body::-webkit-scrollbar{width:4px}
+.lb-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* Submit row */
+.lb-submit{
+  display:flex;gap:8px;margin-bottom:16px;
+  padding-bottom:14px;border-bottom:1px solid var(--border);
+}
+.lb-submit input{
+  flex:1;padding:10px 14px;border-radius:12px;border:1px solid var(--border);
+  background:var(--bg);color:var(--text);font-size:14px;
+  font-family:'Noto Sans TC',sans-serif;outline:none;
+  transition:border-color .2s;
+}
+.lb-submit input:focus{border-color:var(--accent)}
+.lb-submit input::placeholder{color:var(--dim)}
+.lb-submit button{
+  padding:10px 18px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,var(--accent),#0088ff);
+  color:#000;font-weight:700;font-size:14px;cursor:pointer;
+  font-family:'Noto Sans TC',sans-serif;white-space:nowrap;
+  transition:opacity .2s;
+}
+.lb-submit button:disabled{opacity:.4;cursor:not-allowed}
+
+/* Table */
+.lb-table{width:100%}
+.lb-row{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 4px;border-bottom:1px solid var(--border);
+  font-size:13px;transition:background .15s;
+}
+.lb-row:last-child{border-bottom:none}
+.lb-row.me{background:rgba(0,240,255,.08);border-radius:8px}
+.lb-rank-col{
+  width:32px;text-align:center;font-weight:800;
+  font-family:'JetBrains Mono',monospace;font-size:14px;
+}
+.lb-rank-col.top1{color:var(--gold)}
+.lb-rank-col.top2{color:#c0c0c0}
+.lb-rank-col.top3{color:#cd7f32}
+.lb-name-col{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-error-col{
+  width:72px;text-align:right;font-family:'JetBrains Mono',monospace;
+  font-weight:700;font-size:13px;
+}
+.lb-grade-col{
+  width:40px;text-align:center;font-weight:800;
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+}
+
+.lb-empty{text-align:center;color:var(--dim);padding:32px 0;font-size:14px}
+.lb-loading{text-align:center;color:var(--dim);padding:32px 0;font-size:14px}
+
+.lb-footer{
+  padding:12px 20px;border-top:1px solid var(--border);
+  text-align:center;flex-shrink:0;
+}
+.lb-close{
+  background:transparent;border:1px solid var(--border);color:var(--dim);
+  padding:8px 28px;border-radius:50px;font-size:14px;cursor:pointer;
+  font-family:'Noto Sans TC',sans-serif;transition:border-color .2s,color .2s;
+}
+.lb-close:hover{border-color:var(--accent);color:var(--accent)}
+
+.lb-status{
+  font-size:11px;color:var(--dim);margin-top:6px;
+  min-height:16px;
+}
+.lb-status.ok{color:var(--green)}
+.lb-status.err{color:var(--accent2)}
 </style>
 </head>
 <body>
@@ -259,8 +367,31 @@ body{
   <button class="btn btn-share" onclick="shareResult()">分享成績挑戰朋友</button>
   <div class="btn-group">
     <button class="btn btn-secondary" onclick="startGame()">再挑戰一次</button>
+    <button class="btn btn-secondary" onclick="openLeaderboard()" style="border-color:var(--gold);color:var(--gold)">全球排行榜</button>
   </div>
   <p class="share-text">點擊分享複製成績到剪貼簿</p>
+</div>
+
+<!-- LEADERBOARD MODAL -->
+<div class="lb-overlay" id="lb-overlay" onclick="closeLbOverlay(event)">
+  <div class="lb-modal">
+    <div class="lb-header">
+      <h2>全球排行榜</h2>
+      <div class="lb-sub">TOP 20 — 總誤差最低者勝出</div>
+    </div>
+    <div class="lb-body" id="lb-body">
+      <div class="lb-submit" id="lb-submit" style="display:none">
+        <input type="text" id="lb-name" maxlength="10" placeholder="輸入暱稱 (最多10字)">
+        <button id="lb-btn" onclick="submitScore()">送出</button>
+      </div>
+      <div class="lb-loading" id="lb-loading">載入中...</div>
+      <div class="lb-table" id="lb-table"></div>
+      <div class="lb-status" id="lb-status"></div>
+    </div>
+    <div class="lb-footer">
+      <button class="lb-close" onclick="closeLeaderboard()">關閉</button>
+    </div>
+  </div>
 </div>
 
 <!-- AD SLOT -->
@@ -269,7 +400,38 @@ body{
   <span style="font-size:11px">廣告位 — 整合 AdSense 後替換</span>
 </div>
 
+<!-- Firebase SDK (compat mode for simplicity) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
 <script>
+// ==================== FIREBASE CONFIG ====================
+// REPLACE WITH YOUR FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "PLACEHOLDER",
+  authDomain: "PLACEHOLDER",
+  databaseURL: "PLACEHOLDER",
+  projectId: "PLACEHOLDER",
+};
+// FIREBASE_CONFIG_PLACEHOLDER
+// =========================================================
+
+let firebaseReady = false;
+let dbRef = null;
+
+try {
+  if (firebaseConfig.apiKey !== "PLACEHOLDER" && firebaseConfig.databaseURL !== "PLACEHOLDER") {
+    firebase.initializeApp(firebaseConfig);
+    dbRef = firebase.database().ref('scores');
+    firebaseReady = true;
+  }
+} catch (e) {
+  console.warn('Firebase init failed, using localStorage fallback:', e);
+  firebaseReady = false;
+}
+
+// ==================== GAME LOGIC (unchanged) ====================
+
 const ROUNDS = [
   { target: 1.0,  label: '簡單',   cls: 'diff-easy' },
   { target: 2.0,  label: '普通',   cls: 'diff-medium' },
@@ -310,6 +472,7 @@ function startGame() {
   currentRound = 0;
   errors = [];
   state = 'idle';
+  lastSubmittedKey = null;
   setupRound();
   showScreen('game-screen');
 }
@@ -489,7 +652,230 @@ document.addEventListener('keydown', e => {
       handleTap(e);
     }
   }
+  // Escape closes leaderboard
+  if (e.code === 'Escape') {
+    closeLeaderboard();
+  }
 });
+
+// ==================== LEADERBOARD ====================
+
+let lastSubmittedKey = null;
+
+function getRankForError(totalError) {
+  const r = RANKS.find(r => totalError < r.max) || RANKS[RANKS.length - 1];
+  return r.rank;
+}
+
+function getRankClass(rank) {
+  const map = { SSS:'rank-sss', SS:'rank-ss', S:'rank-s', A:'rank-a', B:'rank-b', C:'rank-c', D:'rank-d', F:'rank-f' };
+  return map[rank] || '';
+}
+
+// --- localStorage fallback ---
+
+function getLocalScores() {
+  try {
+    return JSON.parse(localStorage.getItem('ms_leaderboard') || '[]');
+  } catch { return []; }
+}
+
+function saveLocalScores(scores) {
+  // Keep top 1000
+  scores.sort((a, b) => a.totalError - b.totalError);
+  scores = scores.slice(0, 1000);
+  localStorage.setItem('ms_leaderboard', JSON.stringify(scores));
+}
+
+function addLocalScore(entry) {
+  const scores = getLocalScores();
+  entry._localId = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  scores.push(entry);
+  saveLocalScores(scores);
+  return entry._localId;
+}
+
+// --- Leaderboard UI ---
+
+function openLeaderboard() {
+  const overlay = document.getElementById('lb-overlay');
+  overlay.classList.add('open');
+
+  const submitRow = document.getElementById('lb-submit');
+  const nameInput = document.getElementById('lb-name');
+
+  // Show submit if we have a score that hasn't been submitted
+  if (errors.length === ROUNDS.length && !lastSubmittedKey) {
+    submitRow.style.display = 'flex';
+    // Restore last used name
+    const saved = localStorage.getItem('ms_nickname') || '';
+    nameInput.value = saved;
+    document.getElementById('lb-btn').disabled = false;
+  } else {
+    submitRow.style.display = 'none';
+  }
+
+  document.getElementById('lb-status').textContent = '';
+  loadLeaderboard();
+}
+
+function closeLeaderboard() {
+  document.getElementById('lb-overlay').classList.remove('open');
+}
+
+function closeLbOverlay(e) {
+  if (e.target === e.currentTarget) closeLeaderboard();
+}
+
+function loadLeaderboard() {
+  const table = document.getElementById('lb-table');
+  const loading = document.getElementById('lb-loading');
+  loading.style.display = 'block';
+  table.innerHTML = '';
+
+  if (firebaseReady) {
+    loadFirebaseLeaderboard(table, loading);
+  } else {
+    loadLocalLeaderboard(table, loading);
+  }
+}
+
+function loadFirebaseLeaderboard(table, loading) {
+  dbRef.orderByChild('totalError').limitToFirst(20).once('value')
+    .then(snap => {
+      loading.style.display = 'none';
+      const entries = [];
+      snap.forEach(child => {
+        entries.push({ key: child.key, ...child.val() });
+      });
+      renderTable(table, entries);
+    })
+    .catch(err => {
+      console.warn('Firebase read failed, falling back to local:', err);
+      loading.style.display = 'none';
+      loadLocalLeaderboard(table, { style: {} });
+    });
+}
+
+function loadLocalLeaderboard(table, loading) {
+  loading.style.display = 'none';
+  const scores = getLocalScores().sort((a, b) => a.totalError - b.totalError).slice(0, 20);
+  if (scores.length === 0) {
+    table.innerHTML = '<div class="lb-empty">還沒有成績，成為第一位上榜的人！</div>';
+    return;
+  }
+  const entries = scores.map(s => ({ key: s._localId, ...s }));
+  renderTable(table, entries);
+  setStatus('使用本機排行榜（Firebase 未設定）', '');
+}
+
+function renderTable(table, entries) {
+  if (entries.length === 0) {
+    table.innerHTML = '<div class="lb-empty">還沒有成績，成為第一位上榜的人！</div>';
+    return;
+  }
+
+  table.innerHTML = entries.map((e, i) => {
+    const pos = i + 1;
+    const isMe = lastSubmittedKey && e.key === lastSubmittedKey;
+    const rankCls = pos === 1 ? 'top1' : pos === 2 ? 'top2' : pos === 3 ? 'top3' : '';
+    const grade = e.rank || getRankForError(e.totalError);
+    const gradeCls = getRankClass(grade);
+    return `<div class="lb-row${isMe ? ' me' : ''}">
+      <div class="lb-rank-col ${rankCls}">${pos}</div>
+      <div class="lb-name-col">${escapeHtml(e.name || '匿名')}</div>
+      <div class="lb-error-col">${e.totalError.toFixed(3)}s</div>
+      <div class="lb-grade-col ${gradeCls}">${grade}</div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function setStatus(msg, cls) {
+  const el = document.getElementById('lb-status');
+  el.textContent = msg;
+  el.className = 'lb-status' + (cls ? ' ' + cls : '');
+}
+
+function submitScore() {
+  const nameInput = document.getElementById('lb-name');
+  const btn = document.getElementById('lb-btn');
+  const name = nameInput.value.trim().slice(0, 10) || '匿名';
+
+  // Save nickname for next time
+  localStorage.setItem('ms_nickname', name);
+
+  const totalError = errors.reduce((s, e) => s + e.error, 0);
+  const rankInfo = RANKS.find(r => totalError < r.max) || RANKS[RANKS.length - 1];
+
+  const entry = {
+    name: name,
+    totalError: Math.round(totalError * 1000) / 1000, // 3 decimal places
+    rank: rankInfo.rank,
+    timestamp: Date.now(),
+    rounds: errors.map(e => ({
+      target: e.target,
+      error: Math.round(e.error * 1000) / 1000
+    }))
+  };
+
+  btn.disabled = true;
+  setStatus('送出中...', '');
+
+  if (firebaseReady) {
+    submitFirebase(entry, btn);
+  } else {
+    submitLocal(entry, btn);
+  }
+}
+
+function submitFirebase(entry, btn) {
+  const newRef = dbRef.push();
+  newRef.set(entry)
+    .then(() => {
+      lastSubmittedKey = newRef.key;
+      document.getElementById('lb-submit').style.display = 'none';
+      setStatus('成績已送出！', 'ok');
+      loadLeaderboard();
+      cleanupOldScores();
+    })
+    .catch(err => {
+      console.warn('Firebase write failed, saving locally:', err);
+      submitLocal(entry, btn);
+    });
+}
+
+function submitLocal(entry, btn) {
+  const id = addLocalScore(entry);
+  lastSubmittedKey = id;
+  document.getElementById('lb-submit').style.display = 'none';
+  setStatus('成績已儲存（本機）', 'ok');
+  loadLeaderboard();
+}
+
+// Cleanup: keep only top 1000 scores in Firebase
+function cleanupOldScores() {
+  if (!firebaseReady) return;
+  dbRef.orderByChild('totalError').once('value').then(snap => {
+    const total = snap.numChildren();
+    if (total <= 1000) return;
+    // Collect keys sorted by totalError ascending; remove entries beyond 1000
+    const entries = [];
+    snap.forEach(child => {
+      entries.push({ key: child.key, totalError: child.val().totalError });
+    });
+    entries.sort((a, b) => a.totalError - b.totalError);
+    const toDelete = entries.slice(1000);
+    const updates = {};
+    toDelete.forEach(e => { updates[e.key] = null; });
+    dbRef.update(updates).catch(() => {});
+  }).catch(() => {});
+}
 </script>
 </body>
 </html>
