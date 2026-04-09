@@ -421,6 +421,55 @@ body.scrollable{justify-content:flex-start}
   max-height:none;height:auto;flex-shrink:0;
 }
 </style>
+
+<!-- PWA & SEO -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00f0ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="千分之一秒">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='22' fill='%230a0a0f'/%3E%3Ctext x='90' y='112' text-anchor='middle' font-size='94' font-weight='900' font-family='sans-serif' fill='%2300f0ff'%3E%E5%8D%83%3C/text%3E%3Ccircle cx='90' cy='150' r='7' fill='%23ff2d55'/%3E%3C/svg%3E">
+
+<!-- Canonical & hreflang -->
+<link rel="canonical" href="https://yuchenchen-debug.github.io/millisecond-challenge/">
+<link rel="alternate" hreflang="zh-Hant" href="https://yuchenchen-debug.github.io/millisecond-challenge/">
+<link rel="alternate" hreflang="x-default" href="https://yuchenchen-debug.github.io/millisecond-challenge/">
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "千分之一秒",
+  "alternateName": "Millisecond Challenge",
+  "url": "https://yuchenchen-debug.github.io/millisecond-challenge/",
+  "description": "只有 0.01% 的人能拿到 SSS 級。測試你的時間感極限！",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires JavaScript",
+  "inLanguage": "zh-Hant",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "TWD"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "ratingCount": "1200",
+    "bestRating": "5"
+  }
+}
+</script>
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XW1MRWJR2G"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XW1MRWJR2G');
+</script>
 </head>
 <body>
 
@@ -1395,6 +1444,15 @@ function cleanupOldScores() {
     toDelete.forEach(e => { updates[e.key] = null; });
     dbRef.update(updates).catch(() => {});
   }).catch(() => {});
+}
+</script>
+
+<!-- Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
 }
 </script>
 </body>

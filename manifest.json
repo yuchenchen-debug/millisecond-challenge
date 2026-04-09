@@ -1,0 +1,27 @@
+{
+  "name": "千分之一秒",
+  "short_name": "千分之一秒",
+  "description": "只有 0.01% 的人拿到 SSS 級。測試你的時間感極限！",
+  "start_url": "/millisecond-challenge/",
+  "scope": "/millisecond-challenge/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#00f0ff",
+  "lang": "zh-Hant",
+  "orientation": "portrait",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='64' fill='%230a0a0f'/%3E%3Ctext x='256' y='300' text-anchor='middle' font-size='260' font-weight='900' font-family='sans-serif' fill='%2300f0ff'%3E%E5%8D%83%3C/text%3E%3Ccircle cx='256' cy='420' r='20' fill='%23ff2d55'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='24' fill='%230a0a0f'/%3E%3Ctext x='96' y='120' text-anchor='middle' font-size='100' font-weight='900' font-family='sans-serif' fill='%2300f0ff'%3E%E5%8D%83%3C/text%3E%3Ccircle cx='96' cy='160' r='8' fill='%23ff2d55'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
