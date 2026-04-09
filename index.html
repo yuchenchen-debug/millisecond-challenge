@@ -23,15 +23,16 @@
   --text:#e0e0e0;--dim:#666;--accent:#00f0ff;--accent2:#ff2d55;
   --gold:#ffd700;--green:#00ff88;
 }
-html,body{height:100%;overflow:hidden}
+html,body{min-height:100%;margin:0}
 body{
   font-family:'Noto Sans TC','JetBrains Mono',monospace;
   background:var(--bg);color:var(--text);
   display:flex;flex-direction:column;align-items:center;
   justify-content:center;
   -webkit-tap-highlight-color:transparent;
-  user-select:none;
+  user-select:none;overflow-x:hidden;
 }
+body.scrollable{justify-content:flex-start}
 .mono{font-family:'JetBrains Mono',monospace}
 
 /* AD BANNER */
@@ -50,6 +51,7 @@ body{
   padding-bottom:80px;
 }
 .screen.active{display:flex}
+#result-screen{padding-top:20px;max-height:none;height:auto;flex-shrink:0}
 
 /* START */
 #start-screen h1{
@@ -414,9 +416,9 @@ body{
 
 /* ===== NEW: Result screen scrollable ===== */
 #result-screen{
-  overflow-y:auto;justify-content:flex-start;
+  overflow-y:visible;justify-content:flex-start;
   padding-top:20px;
-  max-height:100vh;
+  max-height:none;height:auto;flex-shrink:0;
 }
 </style>
 </head>
@@ -661,6 +663,12 @@ document.getElementById('player-count').textContent = fakeTotal.toLocaleString()
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  if (id === 'result-screen') {
+    document.body.classList.add('scrollable');
+    window.scrollTo(0, 0);
+  } else {
+    document.body.classList.remove('scrollable');
+  }
 }
 
 function startGame() {
