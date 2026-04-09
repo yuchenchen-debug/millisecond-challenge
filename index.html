@@ -1780,10 +1780,15 @@ function switchLang(code) {
   applyLang(code);
 }
 
+function _qs(sel) { return document.querySelector(sel); }
+function _st(sel, txt) { const e = _qs(sel); if (e) e.textContent = txt; }
+function _sh(sel, html) { const e = _qs(sel); if (e) e.innerHTML = html; }
+
 function applyLang(code) {
   currentLang = code;
   const t = LANG[code];
   if (!t) return;
+  try {
 
   // Update lang-btn label
   const langInfo = LANG_LIST.find(l => l.code === code);
@@ -1849,7 +1854,8 @@ function applyLang(code) {
     dl.textContent = t.difficulty[currentRound] || t.difficulty[0];
   }
 
-  document.querySelector('#game-screen .target-label').textContent = t.targetLabel;
+  const _tl = document.querySelector('#game-screen .target-label');
+  if (_tl) _tl.textContent = t.targetLabel;
 
   // Tap hint
   const tapHint = document.getElementById('tap-hint');
@@ -1945,6 +1951,7 @@ function applyLang(code) {
     gameCards[2].querySelector('.name').textContent = t.gameMemory;
     gameCards[2].querySelector('.hook').textContent = t.gameMemoryHook;
   }
+  } catch(e) { console.warn('applyLang error:', e); }
 }
 
 // Initialize
@@ -2046,7 +2053,8 @@ function setupRound() {
   document.getElementById('round-result').classList.remove('show');
   document.getElementById('round-taunt').classList.remove('show');
   document.getElementById('round-taunt').textContent = '';
-  document.querySelector('#game-screen .target-label').textContent = t.targetLabel;
+  const _tl = document.querySelector('#game-screen .target-label');
+  if (_tl) _tl.textContent = t.targetLabel;
 
   const dl = document.getElementById('diff-label');
   dl.textContent = t.difficulty[r.diffIdx];
