@@ -420,6 +420,28 @@ body.scrollable{justify-content:flex-start}
   padding-top:20px;
   max-height:none;height:auto;flex-shrink:0;
 }
+
+/* Language switcher */
+.lang-switcher{
+  position:fixed;top:12px;right:12px;z-index:150;
+}
+.lang-btn{
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text);padding:6px 12px;border-radius:20px;
+  font-size:13px;cursor:pointer;
+}
+.lang-dropdown{
+  position:absolute;top:100%;right:0;margin-top:4px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;display:none;
+  min-width:140px;
+}
+.lang-dropdown.open{display:block}
+.lang-option{
+  padding:8px 14px;cursor:pointer;font-size:13px;
+  display:flex;align-items:center;gap:8px;
+}
+.lang-option:hover{background:var(--border)}
 </style>
 
 <!-- PWA & SEO -->
@@ -472,6 +494,12 @@ body.scrollable{justify-content:flex-start}
 </script>
 </head>
 <body>
+
+<!-- LANGUAGE SWITCHER -->
+<div class="lang-switcher" id="lang-switcher">
+  <button class="lang-btn" id="lang-btn" onclick="toggleLangDropdown()">🇹🇼 繁中</button>
+  <div class="lang-dropdown" id="lang-dropdown"></div>
+</div>
 
 <div class="copied-toast" id="toast">已複製到剪貼簿！</div>
 
@@ -679,14 +707,1259 @@ try {
   firebaseReady = false;
 }
 
+// ==================== I18N ====================
+
+const LANG_LIST = [
+  { code: 'zh-TW', flag: '\u{1F1F9}\u{1F1FC}', label: '繁中' },
+  { code: 'en',    flag: '\u{1F1FA}\u{1F1F8}', label: 'EN' },
+  { code: 'ja',    flag: '\u{1F1EF}\u{1F1F5}', label: '日本語' },
+  { code: 'ko',    flag: '\u{1F1F0}\u{1F1F7}', label: '한국어' },
+  { code: 'es',    flag: '\u{1F1EA}\u{1F1F8}', label: 'ES' },
+  { code: 'pt',    flag: '\u{1F1E7}\u{1F1F7}', label: 'PT-BR' },
+  { code: 'de',    flag: '\u{1F1E9}\u{1F1EA}', label: 'DE' },
+  { code: 'fr',    flag: '\u{1F1EB}\u{1F1F7}', label: 'FR' },
+  { code: 'th',    flag: '\u{1F1F9}\u{1F1ED}', label: 'ไทย' },
+  { code: 'id',    flag: '\u{1F1EE}\u{1F1E9}', label: 'ID' },
+  { code: 'vi',    flag: '\u{1F1FB}\u{1F1F3}', label: 'VI' },
+];
+
+const LANG = {
+'zh-TW': {
+  title: '千分之一秒',
+  subtitle: '測試你的時間感極限',
+  hook: '只有 0.01% 的人拿到 SSS 級',
+  statPlayers: '累計挑戰人次',
+  statSSS: 'SSS 通過率',
+  startBtn: '開始挑戰',
+  ruleText: '5 輪計時挑戰 — 在精確的秒數停下計時器',
+  roundLabel: (n) => `第 ${n} / 5 輪`,
+  difficulty: ['簡單','普通','困難','極限','不可能'],
+  targetLabel: '目標時間',
+  tapStart: '點擊開始計時',
+  tapStop: '點擊停止！',
+  tapNext: '點擊進入下一輪',
+  tapResult: '點擊查看結果',
+  errorLabel: '誤差',
+  yourRank: '你的等級',
+  beatPct: (p) => `你超越了 <em id="percentile">${p}%</em> 的挑戰者`,
+  totalError: '總誤差',
+  wrTitle: '世界紀錄',
+  wrWorld: '世界', wrAsia: '亞洲', wrEurope: '歐洲', wrNA: '北美', wrLocal: '台灣',
+  wrLocalFlag: '\u{1F1F9}\u{1F1FC}',
+  wrLocalName: '時間之子',
+  wrLocalScore: '0.012s',
+  wrDiffBehind: (d) => `距離世界紀錄還差 ${d}s`,
+  wrDiffBeat: '恭喜打破世界紀錄！（？）',
+  roundSummaryLabel: (i, t) => `第${i}輪 (${t}s)`,
+  totalErrorLabel: '總誤差',
+  psychRetry: '再試一次可以更好嗎？根據數據，第二次平均進步 23%',
+  psychWeakness: (r, t) => `你的弱點：第 ${r} 輪 (${t}s) — 你在 ${Math.floor(t)}s 的時間感最差，76% 的失敗者跟你一樣`,
+  psychNextRank: (rank, diff) => `距離 ${rank} 級只差 ${diff}s！`,
+  psychNewBest: (cur, prev, count) => `新個人最佳紀錄！ ${cur}s (前最佳: ${prev}) — 共挑戰 ${count} 次`,
+  psychHistory: (best, rank, count, diff) => `個人最佳: ${best}s (${rank} 級) — 共挑戰 ${count} 次｜本次差距 ${diff}s`,
+  psychFirst: '第一次挑戰！下一次一定能更好。',
+  shareChallengeBtn: '分享成績挑戰朋友',
+  retryBtn: '再挑戰一次',
+  leaderboardBtn: '全球排行榜',
+  shareHint: '點擊分享複製成績到剪貼簿',
+  lbTitle: '全球排行榜',
+  lbSub: 'TOP 20 — 總誤差最低者勝出',
+  lbPlaceholder: '輸入暱稱 (最多10字)',
+  lbSubmitBtn: '送出',
+  lbLoading: '載入中...',
+  lbEmpty: '還沒有成績，成為第一位上榜的人！',
+  lbClose: '關閉',
+  lbAnon: '匿名',
+  lbLocalNote: '使用本機排行榜（Firebase 未設定）',
+  lbSubmitting: '送出中...',
+  lbSubmitted: '成績已送出！',
+  lbSubmittedLocal: '成績已儲存（本機）',
+  copyBtn: '複製圖片',
+  igBtn: 'IG 限動',
+  dlBtn: '下載圖片',
+  toastCopied: '已複製到剪貼簿！',
+  toastImgCopied: '圖片已複製到剪貼簿！',
+  toastImgFallback: '瀏覽器不支援複製圖片，已改為下載',
+  toastImgDl: '圖片已下載！',
+  moreGames: '更多挑戰',
+  gameColor: '色覺測試',
+  gameColorHook: '只有 2.1% 通過 Level 25',
+  gameReaction: '反應力測試',
+  gameReactionHook: '你比 273ms 更快嗎？',
+  gameMemory: '記憶極限',
+  gameMemoryHook: '一般人記住 7 個，你呢？',
+  shareTitle: '千分之一秒',
+  shareText: (rank, taunt, total, pct) => `\u23F1 千分之一秒 — ${rank} 級\n「${taunt}」\n總誤差 ${total}s｜超越 ${pct}% 的人`,
+  shareChallenge: '你能超越我嗎？',
+  shareCanvasSubtitle: '測試你的時間感極限',
+  shareCanvasStats: (total, pct) => `總誤差 ${total}s｜超越 ${pct}% 的人`,
+  ogTitle: '千分之一秒 — 你是前幾%？',
+  ogDesc: '只有 0.01% 的人能拿到 SSS 級。測試你的時間感極限！',
+  metaDesc: '只有 0.01% 的人能拿到 SSS 級。你的時間感有多精準？挑戰千分之一秒！',
+  roundTaunts: [
+    { maxError: 0.005, msg: '...你是機器人嗎？', color: '#ff2d55' },
+    { maxError: 0.015, msg: '變態級精準度', color: '#00ff88' },
+    { maxError: 0.030, msg: '還行，有點天賦', color: '#ffd700' },
+    { maxError: 0.050, msg: '普通人類水準', color: '#e0e0e0' },
+    { maxError: 0.100, msg: '你奶奶可能比你準', color: '#ff6b00' },
+    { maxError: 0.200, msg: '建議去醫院檢查反應力', color: '#ff2d55' },
+    { maxError: Infinity, msg: '你是閉著眼睛按的嗎？', color: '#ff2d55' },
+  ],
+  resultTaunts: {
+    SSS: { main: '你不是人類。', sub: '已通報系統管理員審查' },
+    SS:  { main: '時間操控者', sub: '你的大腦有 bug' },
+    S:   { main: '前 1% 的異類', sub: '大部分人做夢都到不了這裡' },
+    A:   { main: '還不錯', sub: '但離真正的高手還差得遠' },
+    B:   { main: '普通人', sub: '跟其他 85% 的人一樣平庸' },
+    C:   { main: '低於平均', sub: '連猴子隨機按都可能比你準' },
+    D:   { main: '令人擔憂的反應力', sub: '認真的嗎？' },
+    F:   { main: '你確定你有在看螢幕嗎', sub: '史上最爛成績之一' },
+  },
+},
+'en': {
+  title: 'Millisecond',
+  subtitle: 'Test the limits of your time perception',
+  hook: 'Only 0.01% get SSS rank',
+  statPlayers: 'Total attempts',
+  statSSS: 'SSS pass rate',
+  startBtn: 'Start Challenge',
+  ruleText: '5 rounds — stop the timer at the exact target time',
+  roundLabel: (n) => `Round ${n} / 5`,
+  difficulty: ['Easy','Normal','Hard','Extreme','Impossible'],
+  targetLabel: 'Target Time',
+  tapStart: 'Tap to start',
+  tapStop: 'Tap to stop!',
+  tapNext: 'Tap for next round',
+  tapResult: 'Tap to see results',
+  errorLabel: 'Error',
+  yourRank: 'Your Rank',
+  beatPct: (p) => `You beat <em id="percentile">${p}%</em> of challengers`,
+  totalError: 'Total Error',
+  wrTitle: 'World Records',
+  wrWorld: 'World', wrAsia: 'Asia', wrEurope: 'Europe', wrNA: 'N. America', wrLocal: 'USA',
+  wrLocalFlag: '\u{1F1FA}\u{1F1F8}',
+  wrLocalName: 'msReflexGod',
+  wrLocalScore: '0.013s',
+  wrDiffBehind: (d) => `${d}s behind the world record`,
+  wrDiffBeat: 'You broke the world record! (...right?)',
+  roundSummaryLabel: (i, t) => `R${i} (${t}s)`,
+  totalErrorLabel: 'Total Error',
+  psychRetry: 'Think you can do better? Data shows 23% avg improvement on retry',
+  psychWeakness: (r, t) => `Your weakness: Round ${r} (${t}s) — your ${Math.floor(t)}s perception is trash. 76% of losers fail here too`,
+  psychNextRank: (rank, diff) => `Only ${diff}s away from ${rank} rank!`,
+  psychNewBest: (cur, prev, count) => `New personal best! ${cur}s (prev: ${prev}) — ${count} attempts`,
+  psychHistory: (best, rank, count, diff) => `Personal best: ${best}s (${rank}) — ${count} attempts | gap: ${diff}s`,
+  psychFirst: 'First attempt! You\'ll do better next time. Probably.',
+  shareChallengeBtn: 'Share & Challenge Friends',
+  retryBtn: 'Try Again',
+  leaderboardBtn: 'Global Leaderboard',
+  shareHint: 'Tap share to copy results',
+  lbTitle: 'Global Leaderboard',
+  lbSub: 'TOP 20 — Lowest total error wins',
+  lbPlaceholder: 'Nickname (max 10)',
+  lbSubmitBtn: 'Submit',
+  lbLoading: 'Loading...',
+  lbEmpty: 'No scores yet. Be the first!',
+  lbClose: 'Close',
+  lbAnon: 'Anonymous',
+  lbLocalNote: 'Using local leaderboard (Firebase not configured)',
+  lbSubmitting: 'Submitting...',
+  lbSubmitted: 'Score submitted!',
+  lbSubmittedLocal: 'Score saved (local)',
+  copyBtn: 'Copy Image',
+  igBtn: 'IG Story',
+  dlBtn: 'Download',
+  toastCopied: 'Copied to clipboard!',
+  toastImgCopied: 'Image copied to clipboard!',
+  toastImgFallback: 'Copy not supported, downloading instead',
+  toastImgDl: 'Image downloaded!',
+  moreGames: 'More Challenges',
+  gameColor: 'Color IQ Test',
+  gameColorHook: 'Only 2.1% pass Level 25',
+  gameReaction: 'Reaction Test',
+  gameReactionHook: 'Are you faster than 273ms?',
+  gameMemory: 'Memory Limit',
+  gameMemoryHook: 'Average is 7. What\'s yours?',
+  shareTitle: 'Millisecond Challenge',
+  shareText: (rank, taunt, total, pct) => `\u23F1 Millisecond Challenge — ${rank} Rank\n"${taunt}"\nTotal error ${total}s | Beat ${pct}%`,
+  shareChallenge: 'Can you beat me?',
+  shareCanvasSubtitle: 'Test the limits of your time perception',
+  shareCanvasStats: (total, pct) => `Total error ${total}s | Beat ${pct}%`,
+  ogTitle: 'Millisecond — What percentile are you?',
+  ogDesc: 'Only 0.01% get SSS rank. Test the limits of your time perception!',
+  metaDesc: 'Only 0.01% get SSS rank. How precise is your sense of time? Take the Millisecond Challenge!',
+  roundTaunts: [
+    { maxError: 0.005, msg: '...are you a bot?', color: '#ff2d55' },
+    { maxError: 0.015, msg: 'Literally inhuman precision', color: '#00ff88' },
+    { maxError: 0.030, msg: 'Ok, not bad. Kinda impressed ngl', color: '#ffd700' },
+    { maxError: 0.050, msg: 'Certified average human', color: '#e0e0e0' },
+    { maxError: 0.100, msg: 'My grandma could do better tbh', color: '#ff6b00' },
+    { maxError: 0.200, msg: 'Bro, did you even try?', color: '#ff2d55' },
+    { maxError: Infinity, msg: 'Were your eyes closed? Genuinely asking.', color: '#ff2d55' },
+  ],
+  resultTaunts: {
+    SSS: { main: 'You\'re not human.', sub: 'Admin has been notified for review' },
+    SS:  { main: 'Time Bender', sub: 'Your brain is glitched fr' },
+    S:   { main: 'Top 1% freak', sub: 'Most people can only dream of this' },
+    A:   { main: 'Not bad', sub: 'But still lightyears from the real ones' },
+    B:   { main: 'Average Andy', sub: 'Congrats, you\'re as mid as 85% of people' },
+    C:   { main: 'Below average', sub: 'A literal monkey mashing buttons might beat you' },
+    D:   { main: 'Concerning reflexes', sub: 'Were you lagging IRL?' },
+    F:   { main: 'Were you even looking?', sub: 'One of the worst scores in history. Congrats?' },
+  },
+},
+'ja': {
+  title: 'ミリ秒チャレンジ',
+  subtitle: '時間感覚の限界に挑め',
+  hook: 'SSSランクは0.01%だけ',
+  statPlayers: '累計挑戦回数',
+  statSSS: 'SSS合格率',
+  startBtn: 'チャレンジ開始',
+  ruleText: '5ラウンド — 正確な秒数でタイマーを止めろ',
+  roundLabel: (n) => `第${n}ラウンド / 5`,
+  difficulty: ['簡単','普通','難しい','極限','不可能'],
+  targetLabel: '目標タイム',
+  tapStart: 'タップでスタート',
+  tapStop: 'タップでストップ！',
+  tapNext: 'タップで次のラウンドへ',
+  tapResult: 'タップで結果を見る',
+  errorLabel: '誤差',
+  yourRank: 'あなたのランク',
+  beatPct: (p) => `挑戦者の <em id="percentile">${p}%</em> を超えました`,
+  totalError: '合計誤差',
+  wrTitle: '世界記録',
+  wrWorld: '世界', wrAsia: 'アジア', wrEurope: '欧州', wrNA: '北米', wrLocal: '日本',
+  wrLocalFlag: '\u{1F1EF}\u{1F1F5}',
+  wrLocalName: 'Takeshi_ms',
+  wrLocalScore: '0.008s',
+  wrDiffBehind: (d) => `世界記録まであと ${d}s`,
+  wrDiffBeat: '世界記録更新！（...本当に？）',
+  roundSummaryLabel: (i, t) => `第${i}R (${t}s)`,
+  totalErrorLabel: '合計誤差',
+  psychRetry: 'もう一度やればもっと良くなるかも？データによると平均23%改善します',
+  psychWeakness: (r, t) => `弱点：第${r}ラウンド (${t}s) — ${Math.floor(t)}秒の時間感覚が一番ダメですね。失敗者の76%も同じです`,
+  psychNextRank: (rank, diff) => `${rank}ランクまであと${diff}s！`,
+  psychNewBest: (cur, prev, count) => `自己ベスト更新！ ${cur}s (前回: ${prev}) — ${count}回目`,
+  psychHistory: (best, rank, count, diff) => `自己ベスト: ${best}s (${rank}) — ${count}回挑戦 | 差: ${diff}s`,
+  psychFirst: '初挑戦！次はもっと良くなりますよ。たぶん。',
+  shareChallengeBtn: 'シェアして友達に挑戦',
+  retryBtn: 'もう一度',
+  leaderboardBtn: 'ランキング',
+  shareHint: 'シェアで結果をコピー',
+  lbTitle: 'グローバルランキング',
+  lbSub: 'TOP 20 — 合計誤差が少ない順',
+  lbPlaceholder: 'ニックネーム (最大10文字)',
+  lbSubmitBtn: '送信',
+  lbLoading: '読み込み中...',
+  lbEmpty: 'まだスコアがありません。最初の挑戦者になろう！',
+  lbClose: '閉じる',
+  lbAnon: '匿名',
+  lbLocalNote: 'ローカルランキング使用中',
+  lbSubmitting: '送信中...',
+  lbSubmitted: 'スコア送信完了！',
+  lbSubmittedLocal: 'スコア保存済み（ローカル）',
+  copyBtn: '画像コピー',
+  igBtn: 'IGストーリー',
+  dlBtn: 'ダウンロード',
+  toastCopied: 'クリップボードにコピー！',
+  toastImgCopied: '画像をコピーしました！',
+  toastImgFallback: 'コピー非対応、ダウンロードに切替',
+  toastImgDl: '画像をダウンロードしました！',
+  moreGames: 'もっとチャレンジ',
+  gameColor: '色覚テスト',
+  gameColorHook: 'Level 25 合格率はたった2.1%',
+  gameReaction: '反射神経テスト',
+  gameReactionHook: '273msより速い？',
+  gameMemory: '記憶力の限界',
+  gameMemoryHook: '普通は7個。あなたは？',
+  shareTitle: 'ミリ秒チャレンジ',
+  shareText: (rank, taunt, total, pct) => `\u23F1 ミリ秒チャレンジ — ${rank}ランク\n「${taunt}」\n合計誤差 ${total}s｜${pct}%を超えた`,
+  shareChallenge: '私に勝てる？',
+  shareCanvasSubtitle: '時間感覚の限界に挑め',
+  shareCanvasStats: (total, pct) => `合計誤差 ${total}s｜${pct}%超え`,
+  ogTitle: 'ミリ秒チャレンジ — 上位何%？',
+  ogDesc: 'SSSランクは0.01%だけ。時間感覚の限界に挑め！',
+  metaDesc: 'SSSランクは0.01%だけ。あなたの時間感覚はどれほど正確？',
+  roundTaunts: [
+    { maxError: 0.005, msg: 'お見事です...いえ、ボットですよね？', color: '#ff2d55' },
+    { maxError: 0.015, msg: '変態的な精度でございますね', color: '#00ff88' },
+    { maxError: 0.030, msg: 'まぁまぁですね。才能は感じます', color: '#ffd700' },
+    { maxError: 0.050, msg: '一般人の域を出ませんね', color: '#e0e0e0' },
+    { maxError: 0.100, msg: 'おばあちゃんの方が上手いかもしれません', color: '#ff6b00' },
+    { maxError: 0.200, msg: '大変申し訳ありませんが、ゴミです', color: '#ff2d55' },
+    { maxError: Infinity, msg: '目を閉じてましたか？正直にお答えください', color: '#ff2d55' },
+  ],
+  resultTaunts: {
+    SSS: { main: '人間ではありませんね。', sub: '管理者に通報済みです' },
+    SS:  { main: '時間操作者', sub: 'あなたの脳にバグがあります' },
+    S:   { main: '上位1%の変態', sub: '普通の人は夢でもここに来れません' },
+    A:   { main: '悪くないです', sub: 'でも本物の猛者には程遠いですね' },
+    B:   { main: '普通の人間', sub: '85%の凡人と同じレベルです' },
+    C:   { main: '平均以下', sub: 'サルがランダムに押した方が正確かもしれません' },
+    D:   { main: '心配になる反応速度', sub: '本気でしたか？' },
+    F:   { main: '画面を見てましたか？', sub: '歴代ワーストクラスです。おめでとうございます' },
+  },
+},
+'ko': {
+  title: '밀리초 챌린지',
+  subtitle: '시간 감각의 한계에 도전하라',
+  hook: '0.01%만 SSS 랭크 달성',
+  statPlayers: '누적 도전 횟수',
+  statSSS: 'SSS 통과율',
+  startBtn: '도전 시작',
+  ruleText: '5라운드 — 정확한 시간에 타이머를 멈춰라',
+  roundLabel: (n) => `${n} / 5 라운드`,
+  difficulty: ['쉬움','보통','어려움','극한','불가능'],
+  targetLabel: '목표 시간',
+  tapStart: '탭하여 시작',
+  tapStop: '탭하여 정지!',
+  tapNext: '탭하여 다음 라운드',
+  tapResult: '탭하여 결과 보기',
+  errorLabel: '오차',
+  yourRank: '당신의 랭크',
+  beatPct: (p) => `도전자의 <em id="percentile">${p}%</em>를 이겼습니다`,
+  totalError: '총 오차',
+  wrTitle: '세계 기록',
+  wrWorld: '세계', wrAsia: '아시아', wrEurope: '유럽', wrNA: '북미', wrLocal: '한국',
+  wrLocalFlag: '\u{1F1F0}\u{1F1F7}',
+  wrLocalName: '김시간',
+  wrLocalScore: '0.009s',
+  wrDiffBehind: (d) => `세계 기록까지 ${d}s 남음`,
+  wrDiffBeat: '세계 기록 갱신! (...진짜?)',
+  roundSummaryLabel: (i, t) => `R${i} (${t}s)`,
+  totalErrorLabel: '총 오차',
+  psychRetry: '다시 하면 더 잘할 수 있을까? 데이터상 재도전 시 평균 23% 향상',
+  psychWeakness: (r, t) => `약점: ${r}라운드 (${t}s) — ${Math.floor(t)}초 감각이 최악. 패배자의 76%가 여기서 무너짐`,
+  psychNextRank: (rank, diff) => `${rank} 랭크까지 ${diff}s 차이!`,
+  psychNewBest: (cur, prev, count) => `개인 최고 기록! ${cur}s (이전: ${prev}) — ${count}회 도전`,
+  psychHistory: (best, rank, count, diff) => `개인 최고: ${best}s (${rank}) — ${count}회 도전 | 차이: ${diff}s`,
+  psychFirst: '첫 도전! 다음엔 분명 더 잘할 수 있다. 아마도.',
+  shareChallengeBtn: '공유하고 친구에게 도전',
+  retryBtn: '다시 도전',
+  leaderboardBtn: '글로벌 랭킹',
+  shareHint: '공유 버튼으로 결과 복사',
+  lbTitle: '글로벌 랭킹',
+  lbSub: 'TOP 20 — 총 오차가 가장 적은 순',
+  lbPlaceholder: '닉네임 (최대 10자)',
+  lbSubmitBtn: '제출',
+  lbLoading: '로딩 중...',
+  lbEmpty: '아직 기록이 없습니다. 첫 번째 도전자가 되세요!',
+  lbClose: '닫기',
+  lbAnon: '익명',
+  lbLocalNote: '로컬 랭킹 사용 중',
+  lbSubmitting: '제출 중...',
+  lbSubmitted: '기록 제출 완료!',
+  lbSubmittedLocal: '기록 저장됨 (로컬)',
+  copyBtn: '이미지 복사',
+  igBtn: 'IG 스토리',
+  dlBtn: '다운로드',
+  toastCopied: '클립보드에 복사됨!',
+  toastImgCopied: '이미지가 복사되었습니다!',
+  toastImgFallback: '복사 미지원, 다운로드로 전환',
+  toastImgDl: '이미지 다운로드 완료!',
+  moreGames: '더 많은 챌린지',
+  gameColor: '색각 테스트',
+  gameColorHook: 'Level 25 통과율 2.1%',
+  gameReaction: '반응 속도 테스트',
+  gameReactionHook: '273ms보다 빠른가?',
+  gameMemory: '기억력 한계',
+  gameMemoryHook: '보통 7개, 넌?',
+  shareTitle: '밀리초 챌린지',
+  shareText: (rank, taunt, total, pct) => `\u23F1 밀리초 챌린지 — ${rank} 랭크\n「${taunt}」\n총 오차 ${total}s | ${pct}% 이김`,
+  shareChallenge: '이거 나 이길 수 있어?',
+  shareCanvasSubtitle: '시간 감각의 한계에 도전하라',
+  shareCanvasStats: (total, pct) => `총 오차 ${total}s | ${pct}% 이김`,
+  ogTitle: '밀리초 챌린지 — 상위 몇%?',
+  ogDesc: '0.01%만 SSS 랭크 달성. 시간 감각의 한계에 도전!',
+  metaDesc: '0.01%만 SSS 랭크 달성. 당신의 시간 감각은 얼마나 정확한가?',
+  roundTaunts: [
+    { maxError: 0.005, msg: '에임핵 의심 신고합니다', color: '#ff2d55' },
+    { maxError: 0.015, msg: '프로게이머급 정확도 ㄷㄷ', color: '#00ff88' },
+    { maxError: 0.030, msg: '괜찮네, 재능은 있어', color: '#ffd700' },
+    { maxError: 0.050, msg: '브론즈 탈출은 힘들겠다', color: '#e0e0e0' },
+    { maxError: 0.100, msg: '할머니가 더 잘하겠다 ㅋㅋ', color: '#ff6b00' },
+    { maxError: 0.200, msg: '트롤 아니면 진심인가요?', color: '#ff2d55' },
+    { maxError: Infinity, msg: '눈 감고 했냐 ㅋㅋㅋㅋㅋ', color: '#ff2d55' },
+  ],
+  resultTaunts: {
+    SSS: { main: '인간이 아니다.', sub: '운영진에게 핵 의심 신고 접수됨' },
+    SS:  { main: '시간 조종자', sub: '뇌에 버그가 있는 듯' },
+    S:   { main: '상위 1% 괴물', sub: '대부분은 꿈에서도 여기 못 옴' },
+    A:   { main: '나쁘지 않아', sub: '근데 진짜 고수랑은 격차가 큼' },
+    B:   { main: '일반인', sub: '85%의 평범한 사람들과 같은 수준' },
+    C:   { main: '평균 이하', sub: '원숭이 랜덤 클릭이 더 정확할 수도' },
+    D:   { main: '걱정되는 반응속도', sub: '진심이었음? ㅋㅋ' },
+    F:   { main: '모니터 보고 있었음?', sub: '역대급 꼴찌 기록. 축하 ㅋ' },
+  },
+},
+'es': {
+  title: 'Milisegundo',
+  subtitle: 'Pon a prueba tu sentido del tiempo',
+  hook: 'Solo el 0.01% alcanza SSS',
+  statPlayers: 'Intentos totales',
+  statSSS: 'Tasa SSS',
+  startBtn: 'Empezar Desafio',
+  ruleText: '5 rondas — detente en el tiempo exacto',
+  roundLabel: (n) => `Ronda ${n} / 5`,
+  difficulty: ['Facil','Normal','Dificil','Extremo','Imposible'],
+  targetLabel: 'Tiempo Objetivo',
+  tapStart: 'Toca para empezar',
+  tapStop: 'Toca para parar!',
+  tapNext: 'Toca para siguiente ronda',
+  tapResult: 'Toca para ver resultados',
+  errorLabel: 'Error',
+  yourRank: 'Tu Rango',
+  beatPct: (p) => `Superaste al <em id="percentile">${p}%</em> de los retadores`,
+  totalError: 'Error Total',
+  wrTitle: 'Records Mundiales',
+  wrWorld: 'Mundial', wrAsia: 'Asia', wrEurope: 'Europa', wrNA: 'N. America', wrLocal: 'Espana',
+  wrLocalFlag: '\u{1F1EA}\u{1F1F8}',
+  wrLocalName: 'TiempoLoco',
+  wrLocalScore: '0.014s',
+  wrDiffBehind: (d) => `A ${d}s del record mundial`,
+  wrDiffBeat: 'Rompiste el record mundial! (...de verdad?)',
+  roundSummaryLabel: (i, t) => `R${i} (${t}s)`,
+  totalErrorLabel: 'Error Total',
+  psychRetry: 'Puedes hacerlo mejor? Los datos dicen 23% de mejora en el reintento',
+  psychWeakness: (r, t) => `Tu debilidad: Ronda ${r} (${t}s) — tu percepcion de ${Math.floor(t)}s es pesima. 76% de los perdedores fallan aqui`,
+  psychNextRank: (rank, diff) => `Solo ${diff}s para llegar a ${rank}!`,
+  psychNewBest: (cur, prev, count) => `Nuevo record personal! ${cur}s (anterior: ${prev}) — ${count} intentos`,
+  psychHistory: (best, rank, count, diff) => `Mejor marca: ${best}s (${rank}) — ${count} intentos | diferencia: ${diff}s`,
+  psychFirst: 'Primer intento! La proxima sera mejor. Seguramente.',
+  shareChallengeBtn: 'Comparte y reta a tus amigos',
+  retryBtn: 'Intentar de nuevo',
+  leaderboardBtn: 'Ranking Global',
+  shareHint: 'Toca compartir para copiar resultados',
+  lbTitle: 'Ranking Global',
+  lbSub: 'TOP 20 — Menor error total gana',
+  lbPlaceholder: 'Apodo (max 10)',
+  lbSubmitBtn: 'Enviar',
+  lbLoading: 'Cargando...',
+  lbEmpty: 'Sin puntuaciones aun. Se el primero!',
+  lbClose: 'Cerrar',
+  lbAnon: 'Anonimo',
+  lbLocalNote: 'Ranking local (Firebase no configurado)',
+  lbSubmitting: 'Enviando...',
+  lbSubmitted: 'Puntuacion enviada!',
+  lbSubmittedLocal: 'Puntuacion guardada (local)',
+  copyBtn: 'Copiar Imagen',
+  igBtn: 'IG Story',
+  dlBtn: 'Descargar',
+  toastCopied: 'Copiado al portapapeles!',
+  toastImgCopied: 'Imagen copiada!',
+  toastImgFallback: 'No se puede copiar, descargando',
+  toastImgDl: 'Imagen descargada!',
+  moreGames: 'Mas Desafios',
+  gameColor: 'Test de Color',
+  gameColorHook: 'Solo 2.1% pasa Level 25',
+  gameReaction: 'Test de Reaccion',
+  gameReactionHook: 'Eres mas rapido que 273ms?',
+  gameMemory: 'Limite de Memoria',
+  gameMemoryHook: 'Lo normal es 7. Y tu?',
+  shareTitle: 'Milisegundo',
+  shareText: (rank, taunt, total, pct) => `\u23F1 Milisegundo — Rango ${rank}\n"${taunt}"\nError total ${total}s | Supere al ${pct}%`,
+  shareChallenge: 'Puedes superarme?',
+  shareCanvasSubtitle: 'Pon a prueba tu sentido del tiempo',
+  shareCanvasStats: (total, pct) => `Error total ${total}s | Supere al ${pct}%`,
+  ogTitle: 'Milisegundo — En que percentil estas?',
+  ogDesc: 'Solo el 0.01% alcanza SSS. Pon a prueba tu sentido del tiempo!',
+  metaDesc: 'Solo el 0.01% alcanza SSS. Que tan preciso es tu sentido del tiempo?',
+  roundTaunts: [
+    { maxError: 0.005, msg: 'DIOS MIO... eres humano?!', color: '#ff2d55' },
+    { maxError: 0.015, msg: 'Precision de telenovela final de temporada', color: '#00ff88' },
+    { maxError: 0.030, msg: 'Nada mal, tienes talento', color: '#ffd700' },
+    { maxError: 0.050, msg: 'Nivel de mortal comun', color: '#e0e0e0' },
+    { maxError: 0.100, msg: 'Mi abuela lo haria mejor, y esta ciega', color: '#ff6b00' },
+    { maxError: 0.200, msg: 'QUE DRAMATICO! Eso fue terrible', color: '#ff2d55' },
+    { maxError: Infinity, msg: 'Tenias los ojos cerrados?! TRAICION!', color: '#ff2d55' },
+  ],
+  resultTaunts: {
+    SSS: { main: 'No eres humano.', sub: 'Las autoridades han sido notificadas' },
+    SS:  { main: 'Manipulador del Tiempo', sub: 'Tu cerebro tiene un glitch' },
+    S:   { main: 'El 1% de los elegidos', sub: 'Los mortales solo suenan con esto' },
+    A:   { main: 'Nada mal', sub: 'Pero lejos de los verdaderos maestros' },
+    B:   { main: 'Persona comun', sub: 'Tan mediocre como el 85% de la gente' },
+    C:   { main: 'Debajo del promedio', sub: 'Un mono apretando botones seria mas preciso' },
+    D:   { main: 'Reflejos preocupantes', sub: 'En serio? DE VERDAD?' },
+    F:   { main: 'Estabas mirando la pantalla?', sub: 'Uno de los peores resultados de la historia. DRAMA.' },
+  },
+},
+'pt': {
+  title: 'Milissegundo',
+  subtitle: 'Teste o limite da sua percepcao temporal',
+  hook: 'So 0.01% chega no SSS',
+  statPlayers: 'Total de tentativas',
+  statSSS: 'Taxa SSS',
+  startBtn: 'Comecar Desafio',
+  ruleText: '5 rodadas — pare no tempo exato',
+  roundLabel: (n) => `Rodada ${n} / 5`,
+  difficulty: ['Facil','Normal','Dificil','Extremo','Impossivel'],
+  targetLabel: 'Tempo Alvo',
+  tapStart: 'Toque para iniciar',
+  tapStop: 'Toque para parar!',
+  tapNext: 'Toque para proxima rodada',
+  tapResult: 'Toque para ver resultados',
+  errorLabel: 'Erro',
+  yourRank: 'Seu Rank',
+  beatPct: (p) => `Voce superou <em id="percentile">${p}%</em> dos desafiantes`,
+  totalError: 'Erro Total',
+  wrTitle: 'Recordes Mundiais',
+  wrWorld: 'Mundial', wrAsia: 'Asia', wrEurope: 'Europa', wrNA: 'N. America', wrLocal: 'Brasil',
+  wrLocalFlag: '\u{1F1E7}\u{1F1F7}',
+  wrLocalName: 'BRzeiro_ms',
+  wrLocalScore: '0.011s',
+  wrDiffBehind: (d) => `Faltam ${d}s para o recorde mundial`,
+  wrDiffBeat: 'Quebrou o recorde mundial! (...sera?)',
+  roundSummaryLabel: (i, t) => `R${i} (${t}s)`,
+  totalErrorLabel: 'Erro Total',
+  psychRetry: 'Acha que pode melhorar? Dados mostram 23% de melhora na segunda vez',
+  psychWeakness: (r, t) => `Seu ponto fraco: Rodada ${r} (${t}s) — sua percepcao de ${Math.floor(t)}s e horrivel. 76% dos perdedores erram aqui`,
+  psychNextRank: (rank, diff) => `So ${diff}s para chegar em ${rank}!`,
+  psychNewBest: (cur, prev, count) => `Novo recorde pessoal! ${cur}s (anterior: ${prev}) — ${count} tentativas`,
+  psychHistory: (best, rank, count, diff) => `Melhor marca: ${best}s (${rank}) — ${count} tentativas | diferenca: ${diff}s`,
+  psychFirst: 'Primeira tentativa! Na proxima vai ser melhor. Confia.',
+  shareChallengeBtn: 'Compartilhar e desafiar amigos',
+  retryBtn: 'Tentar de novo',
+  leaderboardBtn: 'Ranking Global',
+  shareHint: 'Toque para copiar resultado',
+  lbTitle: 'Ranking Global',
+  lbSub: 'TOP 20 — Menor erro total vence',
+  lbPlaceholder: 'Apelido (max 10)',
+  lbSubmitBtn: 'Enviar',
+  lbLoading: 'Carregando...',
+  lbEmpty: 'Nenhuma pontuacao ainda. Seja o primeiro!',
+  lbClose: 'Fechar',
+  lbAnon: 'Anonimo',
+  lbLocalNote: 'Ranking local (Firebase nao configurado)',
+  lbSubmitting: 'Enviando...',
+  lbSubmitted: 'Pontuacao enviada!',
+  lbSubmittedLocal: 'Pontuacao salva (local)',
+  copyBtn: 'Copiar Imagem',
+  igBtn: 'IG Story',
+  dlBtn: 'Download',
+  toastCopied: 'Copiado!',
+  toastImgCopied: 'Imagem copiada!',
+  toastImgFallback: 'Nao da pra copiar, baixando',
+  toastImgDl: 'Imagem baixada!',
+  moreGames: 'Mais Desafios',
+  gameColor: 'Teste de Cor',
+  gameColorHook: 'So 2.1% passa Level 25',
+  gameReaction: 'Teste de Reacao',
+  gameReactionHook: 'Mais rapido que 273ms?',
+  gameMemory: 'Limite de Memoria',
+  gameMemoryHook: 'Normal e 7. E voce?',
+  shareTitle: 'Milissegundo',
+  shareText: (rank, taunt, total, pct) => `\u23F1 Milissegundo — Rank ${rank}\n"${taunt}"\nErro total ${total}s | Superei ${pct}%`,
+  shareChallenge: 'Consegue me superar?',
+  shareCanvasSubtitle: 'Teste o limite da sua percepcao temporal',
+  shareCanvasStats: (total, pct) => `Erro total ${total}s | Superei ${pct}%`,
+  ogTitle: 'Milissegundo — Voce e top quantos%?',
+  ogDesc: 'So 0.01% chega no SSS. Teste sua percepcao temporal!',
+  metaDesc: 'So 0.01% chega no SSS. Quao preciso e seu senso de tempo?',
+  roundTaunts: [
+    { maxError: 0.005, msg: 'IRMAO??? Voce e um robo???', color: '#ff2d55' },
+    { maxError: 0.015, msg: 'Precisao absurda kkkk monstro', color: '#00ff88' },
+    { maxError: 0.030, msg: 'Ate que ta bom, tem potencial', color: '#ffd700' },
+    { maxError: 0.050, msg: 'Nivel de ser humano normal', color: '#e0e0e0' },
+    { maxError: 0.100, msg: 'Minha vo faria melhor e ela nem sabe o que e internet', color: '#ff6b00' },
+    { maxError: 0.200, msg: 'Mano do ceu kkkk que isso', color: '#ff2d55' },
+    { maxError: Infinity, msg: 'Tava de olho fechado? wkwkwk', color: '#ff2d55' },
+  ],
+  resultTaunts: {
+    SSS: { main: 'Voce nao e humano.', sub: 'Admin foi notificado, suspeito demais' },
+    SS:  { main: 'Manipulador do Tempo', sub: 'Seu cerebro tem um bug mano' },
+    S:   { main: 'Top 1% dos malucos', sub: 'Maioria so sonha em chegar aqui' },
+    A:   { main: 'Nada mal', sub: 'Mas longe dos verdadeiros monstros' },
+    B:   { main: 'Pessoa comum', sub: 'Tao mediano quanto 85% do povo' },
+    C:   { main: 'Abaixo da media', sub: 'Um macaco apertando botao seria mais preciso kkk' },
+    D:   { main: 'Reflexos preocupantes', sub: 'Era serio isso? kkkk' },
+    F:   { main: 'Tava olhando pra tela?', sub: 'Um dos piores resultados da historia. Parabens? kkk' },
+  },
+},
+'de': {
+  title: 'Millisekunde',
+  subtitle: 'Teste die Grenzen deiner Zeitwahrnehmung',
+  hook: 'Nur 0,01% erreichen SSS',
+  statPlayers: 'Gesamtversuche',
+  statSSS: 'SSS-Quote',
+  startBtn: 'Challenge starten',
+  ruleText: '5 Runden — stoppe den Timer exakt bei der Zielzeit',
+  roundLabel: (n) => `Runde ${n} / 5`,
+  difficulty: ['Leicht','Normal','Schwer','Extrem','Unmoglich'],
+  targetLabel: 'Zielzeit',
+  tapStart: 'Tippen zum Starten',
+  tapStop: 'Tippen zum Stoppen!',
+  tapNext: 'Tippen fur nachste Runde',
+  tapResult: 'Tippen fur Ergebnis',
+  errorLabel: 'Abweichung',
+  yourRank: 'Dein Rang',
+  beatPct: (p) => `Du hast <em id="percentile">${p}%</em> der Herausforderer geschlagen`,
+  totalError: 'Gesamtfehler',
+  wrTitle: 'Weltrekorde',
+  wrWorld: 'Welt', wrAsia: 'Asien', wrEurope: 'Europa', wrNA: 'N-Amerika', wrLocal: 'Deutschland',
+  wrLocalFlag: '\u{1F1E9}\u{1F1EA}',
+  wrLocalName: 'ZeitMeister',
+  wrLocalScore: '0.011s',
+  wrDiffBehind: (d) => `${d}s hinter dem Weltrekord`,
+  wrDiffBeat: 'Weltrekord gebrochen! (...wirklich?)',
+  roundSummaryLabel: (i, t) => `R${i} (${t}s)`,
+  totalErrorLabel: 'Gesamtfehler',
+  psychRetry: 'Noch einmal versuchen? Statistisch 23% Verbesserung beim zweiten Mal',
+  psychWeakness: (r, t) => `Schwachpunkt: Runde ${r} (${t}s) — dein ${Math.floor(t)}s-Zeitgefuhl ist mangelhaft. 76% der Verlierer scheitern hier`,
+  psychNextRank: (rank, diff) => `Nur ${diff}s bis ${rank}-Rang!`,
+  psychNewBest: (cur, prev, count) => `Neuer personlicher Rekord! ${cur}s (vorher: ${prev}) — ${count} Versuche`,
+  psychHistory: (best, rank, count, diff) => `Bestleistung: ${best}s (${rank}) — ${count} Versuche | Differenz: ${diff}s`,
+  psychFirst: 'Erster Versuch! Nachstes Mal wird es besser. Vermutlich.',
+  shareChallengeBtn: 'Teilen & Freunde herausfordern',
+  retryBtn: 'Nochmal',
+  leaderboardBtn: 'Globale Rangliste',
+  shareHint: 'Teilen um Ergebnis zu kopieren',
+  lbTitle: 'Globale Rangliste',
+  lbSub: 'TOP 20 — Niedrigster Gesamtfehler gewinnt',
+  lbPlaceholder: 'Spitzname (max 10)',
+  lbSubmitBtn: 'Senden',
+  lbLoading: 'Laden...',
+  lbEmpty: 'Noch keine Ergebnisse. Sei der Erste!',
+  lbClose: 'Schliessen',
+  lbAnon: 'Anonym',
+  lbLocalNote: 'Lokale Rangliste (Firebase nicht konfiguriert)',
+  lbSubmitting: 'Wird gesendet...',
+  lbSubmitted: 'Ergebnis gesendet!',
+  lbSubmittedLocal: 'Ergebnis gespeichert (lokal)',
+  copyBtn: 'Bild kopieren',
+  igBtn: 'IG Story',
+  dlBtn: 'Herunterladen',
+  toastCopied: 'In Zwischenablage kopiert!',
+  toastImgCopied: 'Bild kopiert!',
+  toastImgFallback: 'Kopieren nicht unterstutzt, wird heruntergeladen',
+  toastImgDl: 'Bild heruntergeladen!',
+  moreGames: 'Weitere Challenges',
+  gameColor: 'Farbsehen-Test',
+  gameColorHook: 'Nur 2,1% schaffen Level 25',
+  gameReaction: 'Reaktionstest',
+  gameReactionHook: 'Schneller als 273ms?',
+  gameMemory: 'Gedachtnislimit',
+  gameMemoryHook: 'Durchschnitt: 7. Und du?',
+  shareTitle: 'Millisekunde',
+  shareText: (rank, taunt, total, pct) => `\u23F1 Millisekunde — Rang ${rank}\n"${taunt}"\nGesamtfehler ${total}s | ${pct}% geschlagen`,
+  shareChallenge: 'Schaffst du es besser?',
+  shareCanvasSubtitle: 'Teste die Grenzen deiner Zeitwahrnehmung',
+  shareCanvasStats: (total, pct) => `Gesamtfehler ${total}s | ${pct}% geschlagen`,
+  ogTitle: 'Millisekunde — Welches Perzentil bist du?',
+  ogDesc: 'Nur 0,01% erreichen SSS. Teste deine Zeitwahrnehmung!',
+  metaDesc: 'Nur 0,01% erreichen SSS. Wie prazise ist dein Zeitgefuhl?',
+  roundTaunts: [
+    { maxError: 0.005, msg: 'Entschuldigung, sind Sie ein Roboter?', color: '#ff2d55' },
+    { maxError: 0.015, msg: 'Beunruhigend prazise. Respekt.', color: '#00ff88' },
+    { maxError: 0.030, msg: 'Akzeptabel. Knappe Punktlandung.', color: '#ffd700' },
+    { maxError: 0.050, msg: 'Durchschnittliches menschliches Niveau', color: '#e0e0e0' },
+    { maxError: 0.100, msg: 'Meine Oma ware praziser. Sie ist 94.', color: '#ff6b00' },
+    { maxError: 0.200, msg: 'Mangelhaft. Setzen. Sechs.', color: '#ff2d55' },
+    { maxError: Infinity, msg: 'Waren Ihre Augen geschlossen? Bitte ehrlich antworten.', color: '#ff2d55' },
+  ],
+  resultTaunts: {
+    SSS: { main: 'Sie sind kein Mensch.', sub: 'Administration wurde benachrichtigt' },
+    SS:  { main: 'Zeitmanipulator', sub: 'Ihr Gehirn hat einen Fehler' },
+    S:   { main: 'Top 1% Anomalie', sub: 'Die meisten Menschen konnen davon nur traumen' },
+    A:   { main: 'Nicht schlecht', sub: 'Aber weit entfernt von den Besten' },
+    B:   { main: 'Durchschnitt', sub: 'So mittelmassig wie 85% der Bevolkerung' },
+    C:   { main: 'Unterdurchschnittlich', sub: 'Ein Affe mit Zufallsgenerator ware praziser' },
+    D:   { main: 'Besorgniserregende Reflexe', sub: 'War das Ihr Ernst?' },
+    F:   { main: 'Haben Sie auf den Bildschirm geschaut?', sub: 'Eines der schlechtesten Ergebnisse aller Zeiten. Protokolliert.' },
+  },
+},
+'fr': {
+  title: 'Milliseconde',
+  subtitle: 'Testez les limites de votre perception du temps',
+  hook: 'Seuls 0,01% atteignent SSS',
+  statPlayers: 'Tentatives totales',
+  statSSS: 'Taux SSS',
+  startBtn: 'Commencer le Defi',
+  ruleText: '5 manches — arretez le chrono au temps exact',
+  roundLabel: (n) => `Manche ${n} / 5`,
+  difficulty: ['Facile','Normal','Difficile','Extreme','Impossible'],
+  targetLabel: 'Temps Cible',
+  tapStart: 'Touchez pour demarrer',
+  tapStop: 'Touchez pour arreter !',
+  tapNext: 'Touchez pour la manche suivante',
+  tapResult: 'Touchez pour les resultats',
+  errorLabel: 'Erreur',
+  yourRank: 'Votre Rang',
+  beatPct: (p) => `Vous avez battu <em id="percentile">${p}%</em> des challengers`,
+  totalError: 'Erreur Totale',
+  wrTitle: 'Records du Monde',
+  wrWorld: 'Monde', wrAsia: 'Asie', wrEurope: 'Europe', wrNA: 'N. Amerique', wrLocal: 'France',
+  wrLocalFlag: '\u{1F1EB}\u{1F1F7}',
+  wrLocalName: 'LeChrono',
+  wrLocalScore: '0.012s',
+  wrDiffBehind: (d) => `A ${d}s du record du monde`,
+  wrDiffBeat: 'Record du monde battu ! (...vraiment ?)',
+  roundSummaryLabel: (i, t) => `M${i} (${t}s)`,
+  totalErrorLabel: 'Erreur Totale',
+  psychRetry: 'Vous pouvez faire mieux ? Les donnees montrent 23% d\'amelioration au 2e essai',
+  psychWeakness: (r, t) => `Votre faiblesse : Manche ${r} (${t}s) — votre perception de ${Math.floor(t)}s est deplorable. 76% des perdants echouent ici`,
+  psychNextRank: (rank, diff) => `Plus que ${diff}s pour atteindre ${rank} !`,
+  psychNewBest: (cur, prev, count) => `Nouveau record personnel ! ${cur}s (precedent : ${prev}) — ${count} tentatives`,
+  psychHistory: (best, rank, count, diff) => `Meilleur score : ${best}s (${rank}) — ${count} tentatives | ecart : ${diff}s`,
+  psychFirst: 'Premier essai ! La prochaine fois sera meilleure. Probablement.',
+  shareChallengeBtn: 'Partager et defier vos amis',
+  retryBtn: 'Reessayer',
+  leaderboardBtn: 'Classement Mondial',
+  shareHint: 'Touchez partager pour copier les resultats',
+  lbTitle: 'Classement Mondial',
+  lbSub: 'TOP 20 — Plus faible erreur totale gagne',
+  lbPlaceholder: 'Pseudo (max 10)',
+  lbSubmitBtn: 'Envoyer',
+  lbLoading: 'Chargement...',
+  lbEmpty: 'Aucun score. Soyez le premier !',
+  lbClose: 'Fermer',
+  lbAnon: 'Anonyme',
+  lbLocalNote: 'Classement local (Firebase non configure)',
+  lbSubmitting: 'Envoi en cours...',
+  lbSubmitted: 'Score envoye !',
+  lbSubmittedLocal: 'Score sauvegarde (local)',
+  copyBtn: 'Copier Image',
+  igBtn: 'Story IG',
+  dlBtn: 'Telecharger',
+  toastCopied: 'Copie dans le presse-papiers !',
+  toastImgCopied: 'Image copiee !',
+  toastImgFallback: 'Copie non supportee, telechargement',
+  toastImgDl: 'Image telechargee !',
+  moreGames: 'Plus de Defis',
+  gameColor: 'Test de Vision des Couleurs',
+  gameColorHook: 'Seuls 2,1% passent Level 25',
+  gameReaction: 'Test de Reaction',
+  gameReactionHook: 'Plus rapide que 273ms ?',
+  gameMemory: 'Limite de Memoire',
+  gameMemoryHook: 'La moyenne est 7. Et vous ?',
+  shareTitle: 'Milliseconde',
+  shareText: (rank, taunt, total, pct) => `\u23F1 Milliseconde — Rang ${rank}\n\u00AB ${taunt} \u00BB\nErreur totale ${total}s | Battu ${pct}%`,
+  shareChallenge: 'Pouvez-vous faire mieux ?',
+  shareCanvasSubtitle: 'Testez les limites de votre perception du temps',
+  shareCanvasStats: (total, pct) => `Erreur totale ${total}s | Battu ${pct}%`,
+  ogTitle: 'Milliseconde — Quel percentile etes-vous ?',
+  ogDesc: 'Seuls 0,01% atteignent SSS. Testez votre perception du temps !',
+  metaDesc: 'Seuls 0,01% atteignent SSS. Quelle est la precision de votre sens du temps ?',
+  roundTaunts: [
+    { maxError: 0.005, msg: 'Pardon... vous etes un robot, n\'est-ce pas ?', color: '#ff2d55' },
+    { maxError: 0.015, msg: 'Precision chirurgicale. Inquietant.', color: '#00ff88' },
+    { maxError: 0.030, msg: 'Pas mal. Du talent, peut-etre.', color: '#ffd700' },
+    { maxError: 0.050, msg: 'Niveau mortel ordinaire', color: '#e0e0e0' },
+    { maxError: 0.100, msg: 'Ma grand-mere ferait mieux. Elle a 97 ans.', color: '#ff6b00' },
+    { maxError: 0.200, msg: 'Quelle indignite. C\'est consternant.', color: '#ff2d55' },
+    { maxError: Infinity, msg: 'Vos yeux etaient-ils fermes ? Repondez honnetement.', color: '#ff2d55' },
+  ],
+  resultTaunts: {
+    SSS: { main: 'Vous n\'etes pas humain.', sub: 'L\'administration a ete notifiee' },
+    SS:  { main: 'Manipulateur du Temps', sub: 'Votre cerveau a un dysfonctionnement' },
+    S:   { main: 'Top 1% des anomalies', sub: 'Le commun des mortels ne reve meme pas d\'arriver ici' },
+    A:   { main: 'Pas mal', sub: 'Mais loin, tres loin des vrais maitres' },
+    B:   { main: 'Personne ordinaire', sub: 'Aussi mediocre que 85% de l\'humanite' },
+    C:   { main: 'Sous la moyenne', sub: 'Un singe appuyant au hasard serait plus precis' },
+    D:   { main: 'Reflexes preoccupants', sub: 'C\'etait serieux ?' },
+    F:   { main: 'Regardiez-vous l\'ecran ?', sub: 'L\'un des pires resultats jamais enregistres. Bravo.' },
+  },
+},
+'th': {
+  title: 'มิลลิวินาที',
+  subtitle: 'ทดสอบขีดจำกัดการรับรู้เวลาของคุณ',
+  hook: 'แค่ 0.01% ที่ได้ SSS',
+  statPlayers: 'จำนวนผู้ท้าทาย',
+  statSSS: 'อัตราผ่าน SSS',
+  startBtn: 'เริ่มท้าทาย',
+  ruleText: '5 รอบ — หยุดจับเวลาที่เวลาเป้าหมาย',
+  roundLabel: (n) => `รอบที่ ${n} / 5`,
+  difficulty: ['ง่าย','ปกติ','ยาก','สุดขีด','เป็นไปไม่ได้'],
+  targetLabel: 'เวลาเป้าหมาย',
+  tapStart: 'แตะเพื่อเริ่ม',
+  tapStop: 'แตะเพื่อหยุด!',
+  tapNext: 'แตะเพื่อรอบถัดไป',
+  tapResult: 'แตะเพื่อดูผลลัพธ์',
+  errorLabel: 'ค่าผิดพลาด',
+  yourRank: 'แรงค์ของคุณ',
+  beatPct: (p) => `คุณเอาชนะ <em id="percentile">${p}%</em> ของผู้ท้าทาย`,
+  totalError: 'ค่าผิดพลาดรวม',
+  wrTitle: 'สถิติโลก',
+  wrWorld: 'โลก', wrAsia: 'เอเชีย', wrEurope: 'ยุโรป', wrNA: 'อเมริกาเหนือ', wrLocal: 'ไทย',
+  wrLocalFlag: '\u{1F1F9}\u{1F1ED}',
+  wrLocalName: 'เทพเวลา',
+  wrLocalScore: '0.013s',
+  wrDiffBehind: (d) => `ห่างสถิติโลก ${d}s`,
+  wrDiffBeat: 'ทำลายสถิติโลก! (...จริงเหรอ?)',
+  roundSummaryLabel: (i, t) => `R${i} (${t}s)`,
+  totalErrorLabel: 'ค่าผิดพลาดรวม',
+  psychRetry: 'ลองอีกทีจะดีขึ้นมั้ย? ข้อมูลบอกว่าดีขึ้น 23% ในรอบที่สอง',
+  psychWeakness: (r, t) => `จุดอ่อน: รอบที่ ${r} (${t}s) — การรับรู้ ${Math.floor(t)}s ของคุณแย่สุด 76% ของคนแพ้ก็พลาดตรงนี้`,
+  psychNextRank: (rank, diff) => `อีกแค่ ${diff}s ก็ถึง ${rank}!`,
+  psychNewBest: (cur, prev, count) => `สถิติส่วนตัวใหม่! ${cur}s (ก่อนหน้า: ${prev}) — ${count} ครั้ง`,
+  psychHistory: (best, rank, count, diff) => `สถิติดีสุด: ${best}s (${rank}) — ${count} ครั้ง | ห่าง: ${diff}s`,
+  psychFirst: 'ท้าทายครั้งแรก! ครั้งหน้าจะดีขึ้นแน่นอน',
+  shareChallengeBtn: 'แชร์ท้าทายเพื่อน',
+  retryBtn: 'ลองอีกครั้ง',
+  leaderboardBtn: 'อันดับโลก',
+  shareHint: 'แตะแชร์เพื่อคัดลอกผลลัพธ์',
+  lbTitle: 'อันดับโลก',
+  lbSub: 'TOP 20 — ค่าผิดพลาดน้อยสุดชนะ',
+  lbPlaceholder: 'ชื่อเล่น (สูงสุด 10)',
+  lbSubmitBtn: 'ส่ง',
+  lbLoading: 'กำลังโหลด...',
+  lbEmpty: 'ยังไม่มีคะแนน เป็นคนแรกเลย!',
+  lbClose: 'ปิด',
+  lbAnon: 'ไม่ระบุชื่อ',
+  lbLocalNote: 'ใช้อันดับในเครื่อง',
+  lbSubmitting: 'กำลังส่ง...',
+  lbSubmitted: 'ส่งคะแนนแล้ว!',
+  lbSubmittedLocal: 'บันทึกแล้ว (ในเครื่อง)',
+  copyBtn: 'คัดลอกรูป',
+  igBtn: 'IG Story',
+  dlBtn: 'ดาวน์โหลด',
+  toastCopied: 'คัดลอกแล้ว!',
+  toastImgCopied: 'คัดลอกรูปแล้ว!',
+  toastImgFallback: 'คัดลอกไม่ได้ กำลังดาวน์โหลด',
+  toastImgDl: 'ดาวน์โหลดรูปแล้ว!',
+  moreGames: 'ท้าทายเพิ่มเติม',
+  gameColor: 'ทดสอบสายตาสี',
+  gameColorHook: 'แค่ 2.1% ผ่าน Level 25',
+  gameReaction: 'ทดสอบปฏิกิริยา',
+  gameReactionHook: 'เร็วกว่า 273ms มั้ย?',
+  gameMemory: 'ขีดจำกัดความจำ',
+  gameMemoryHook: 'คนทั่วไปจำได้ 7 คุณล่ะ?',
+  shareTitle: 'มิลลิวินาที',
+  shareText: (rank, taunt, total, pct) => `\u23F1 มิลลิวินาที — แรงค์ ${rank}\n"${taunt}"\nค่าผิดพลาดรวม ${total}s | ชนะ ${pct}%`,
+  shareChallenge: 'เอาชนะฉันได้มั้ย?',
+  shareCanvasSubtitle: 'ทดสอบขีดจำกัดการรับรู้เวลาของคุณ',
+  shareCanvasStats: (total, pct) => `ค่าผิดพลาดรวม ${total}s | ชนะ ${pct}%`,
+  ogTitle: 'มิลลิวินาที — คุณอยู่ top กี่%?',
+  ogDesc: 'แค่ 0.01% ที่ได้ SSS ทดสอบขีดจำกัดเวลาของคุณ!',
+  metaDesc: 'แค่ 0.01% ที่ได้ SSS การรับรู้เวลาของคุณแม่นแค่ไหน?',
+  roundTaunts: [
+    { maxError: 0.005, msg: 'เอ... คุณเป็นบอทใช่มั้ย 555', color: '#ff2d55' },
+    { maxError: 0.015, msg: 'แม่นจัดปาด! เทพมาก 555', color: '#00ff88' },
+    { maxError: 0.030, msg: 'โอเค ไม่เลวเลยนะ', color: '#ffd700' },
+    { maxError: 0.050, msg: 'ระดับมนุษย์ธรรมดา', color: '#e0e0e0' },
+    { maxError: 0.100, msg: 'ยายยังทำได้ดีกว่า 555', color: '#ff6b00' },
+    { maxError: 0.200, msg: 'โอ้ยยย แย่มาก 5555', color: '#ff2d55' },
+    { maxError: Infinity, msg: 'หลับตากดเหรอ 55555555', color: '#ff2d55' },
+  ],
+  resultTaunts: {
+    SSS: { main: 'คุณไม่ใช่มนุษย์', sub: 'แจ้งแอดมินตรวจสอบแล้ว' },
+    SS:  { main: 'ผู้ควบคุมเวลา', sub: 'สมองคุณมีบัค' },
+    S:   { main: 'Top 1% สุดยอด', sub: 'คนส่วนใหญ่ฝันยังไม่ถึง' },
+    A:   { main: 'ไม่เลว', sub: 'แต่ยังห่างจากเทพตัวจริง' },
+    B:   { main: 'คนธรรมดา', sub: 'ธรรมดาเหมือน 85% ของคน' },
+    C:   { main: 'ต่ำกว่าค่าเฉลี่ย', sub: 'ลิงกดสุ่มอาจแม่นกว่า 555' },
+    D:   { main: 'ปฏิกิริยาน่าเป็นห่วง', sub: 'เอาจริงเหรอ?' },
+    F:   { main: 'ดูหน้าจออยู่มั้ย?', sub: 'คะแนนแย่ที่สุดอันดับต้นๆ ยินดีด้วย?' },
+  },
+},
+'id': {
+  title: 'Milidetik',
+  subtitle: 'Uji batas persepsi waktumu',
+  hook: 'Cuma 0.01% yang dapet SSS',
+  statPlayers: 'Total percobaan',
+  statSSS: 'Tingkat SSS',
+  startBtn: 'Mulai Tantangan',
+  ruleText: '5 ronde — hentikan timer di waktu yang tepat',
+  roundLabel: (n) => `Ronde ${n} / 5`,
+  difficulty: ['Gampang','Normal','Susah','Ekstrem','Mustahil'],
+  targetLabel: 'Waktu Target',
+  tapStart: 'Ketuk untuk mulai',
+  tapStop: 'Ketuk untuk stop!',
+  tapNext: 'Ketuk untuk ronde berikutnya',
+  tapResult: 'Ketuk untuk lihat hasil',
+  errorLabel: 'Error',
+  yourRank: 'Rank Kamu',
+  beatPct: (p) => `Kamu ngalahin <em id="percentile">${p}%</em> penantang`,
+  totalError: 'Total Error',
+  wrTitle: 'Rekor Dunia',
+  wrWorld: 'Dunia', wrAsia: 'Asia', wrEurope: 'Eropa', wrNA: 'N. Amerika', wrLocal: 'Indonesia',
+  wrLocalFlag: '\u{1F1EE}\u{1F1E9}',
+  wrLocalName: 'WaktuMaster',
+  wrLocalScore: '0.014s',
+  wrDiffBehind: (d) => `${d}s lagi ke rekor dunia`,
+  wrDiffBeat: 'Rekor dunia pecah! (...beneran?)',
+  roundSummaryLabel: (i, t) => `R${i} (${t}s)`,
+  totalErrorLabel: 'Total Error',
+  psychRetry: 'Coba lagi bisa lebih bagus? Data bilang rata-rata naik 23% di percobaan kedua',
+  psychWeakness: (r, t) => `Kelemahanmu: Ronde ${r} (${t}s) — persepsi ${Math.floor(t)}s kamu parah. 76% yang kalah juga gagal di sini`,
+  psychNextRank: (rank, diff) => `Tinggal ${diff}s lagi ke ${rank}!`,
+  psychNewBest: (cur, prev, count) => `Rekor pribadi baru! ${cur}s (sebelum: ${prev}) — ${count} percobaan`,
+  psychHistory: (best, rank, count, diff) => `Rekor terbaik: ${best}s (${rank}) — ${count} percobaan | selisih: ${diff}s`,
+  psychFirst: 'Percobaan pertama! Pasti lebih bagus besok. Mungkin.',
+  shareChallengeBtn: 'Share & Tantang Teman',
+  retryBtn: 'Coba Lagi',
+  leaderboardBtn: 'Papan Peringkat',
+  shareHint: 'Ketuk share untuk copy hasil',
+  lbTitle: 'Papan Peringkat Global',
+  lbSub: 'TOP 20 — Total error terendah menang',
+  lbPlaceholder: 'Nickname (maks 10)',
+  lbSubmitBtn: 'Kirim',
+  lbLoading: 'Memuat...',
+  lbEmpty: 'Belum ada skor. Jadi yang pertama!',
+  lbClose: 'Tutup',
+  lbAnon: 'Anonim',
+  lbLocalNote: 'Peringkat lokal (Firebase belum diatur)',
+  lbSubmitting: 'Mengirim...',
+  lbSubmitted: 'Skor terkirim!',
+  lbSubmittedLocal: 'Skor tersimpan (lokal)',
+  copyBtn: 'Copy Gambar',
+  igBtn: 'IG Story',
+  dlBtn: 'Download',
+  toastCopied: 'Tersalin ke clipboard!',
+  toastImgCopied: 'Gambar tersalin!',
+  toastImgFallback: 'Ga bisa copy, didownload aja',
+  toastImgDl: 'Gambar terdownload!',
+  moreGames: 'Tantangan Lainnya',
+  gameColor: 'Tes Warna',
+  gameColorHook: 'Cuma 2.1% lolos Level 25',
+  gameReaction: 'Tes Reaksi',
+  gameReactionHook: 'Lebih cepet dari 273ms?',
+  gameMemory: 'Batas Memori',
+  gameMemoryHook: 'Rata-rata 7. Kamu?',
+  shareTitle: 'Milidetik',
+  shareText: (rank, taunt, total, pct) => `\u23F1 Milidetik — Rank ${rank}\n"${taunt}"\nTotal error ${total}s | Ngalahin ${pct}%`,
+  shareChallenge: 'Bisa ngalahin gue ga?',
+  shareCanvasSubtitle: 'Uji batas persepsi waktumu',
+  shareCanvasStats: (total, pct) => `Total error ${total}s | Ngalahin ${pct}%`,
+  ogTitle: 'Milidetik — Kamu top berapa%?',
+  ogDesc: 'Cuma 0.01% yang dapet SSS. Uji persepsi waktumu!',
+  metaDesc: 'Cuma 0.01% yang dapet SSS. Seberapa akurat persepsi waktumu?',
+  roundTaunts: [
+    { maxError: 0.005, msg: 'Eh... kamu bot ya? wkwk', color: '#ff2d55' },
+    { maxError: 0.015, msg: 'Akurasi gila sih wkwkwk', color: '#00ff88' },
+    { maxError: 0.030, msg: 'Lumayan lah, ada bakat', color: '#ffd700' },
+    { maxError: 0.050, msg: 'Level manusia biasa', color: '#e0e0e0' },
+    { maxError: 0.100, msg: 'Nenek gue lebih jago wkwk', color: '#ff6b00' },
+    { maxError: 0.200, msg: 'Parah sih ini wkwkwk', color: '#ff2d55' },
+    { maxError: Infinity, msg: 'Merem ya? wkwkwkwkwk', color: '#ff2d55' },
+  ],
+  resultTaunts: {
+    SSS: { main: 'Kamu bukan manusia.', sub: 'Admin udah diberitahu buat investigasi' },
+    SS:  { main: 'Pengendali Waktu', sub: 'Otakmu ada bug kayaknya' },
+    S:   { main: 'Top 1% manusia aneh', sub: 'Kebanyakan orang mimpi aja ga nyampe sini' },
+    A:   { main: 'Lumayan', sub: 'Tapi masih jauh dari yang beneran jago' },
+    B:   { main: 'Orang biasa', sub: 'Sama aja kayak 85% orang lainnya wkwk' },
+    C:   { main: 'Di bawah rata-rata', sub: 'Monyet pencet random mungkin lebih akurat' },
+    D:   { main: 'Reaksi mengkhawatirkan', sub: 'Serius? wkwk' },
+    F:   { main: 'Ngeliat layar ga sih?', sub: 'Salah satu skor terburuk sepanjang masa. Selamat? wkwk' },
+  },
+},
+'vi': {
+  title: 'Phan Ngan Giay',
+  subtitle: 'Thu thach gioi han cam nhan thoi gian',
+  hook: 'Chi 0.01% dat rank SSS',
+  statPlayers: 'Tong so thu thach',
+  statSSS: 'Ti le SSS',
+  startBtn: 'Bat Dau Thu Thach',
+  ruleText: '5 vong — dung dong ho dung thoi diem chinh xac',
+  roundLabel: (n) => `Vong ${n} / 5`,
+  difficulty: ['De','Trung binh','Kho','Cuc han','Bat kha thi'],
+  targetLabel: 'Thoi Gian Muc Tieu',
+  tapStart: 'Cham de bat dau',
+  tapStop: 'Cham de dung!',
+  tapNext: 'Cham de sang vong tiep',
+  tapResult: 'Cham de xem ket qua',
+  errorLabel: 'Sai so',
+  yourRank: 'Rank Cua Ban',
+  beatPct: (p) => `Ban da vuot qua <em id="percentile">${p}%</em> nguoi choi`,
+  totalError: 'Tong Sai So',
+  wrTitle: 'Ky Luc The Gioi',
+  wrWorld: 'The gioi', wrAsia: 'Chau A', wrEurope: 'Chau Au', wrNA: 'Bac My', wrLocal: 'Viet Nam',
+  wrLocalFlag: '\u{1F1FB}\u{1F1F3}',
+  wrLocalName: 'ThoiGianVN',
+  wrLocalScore: '0.013s',
+  wrDiffBehind: (d) => `Con ${d}s nua de dat ky luc the gioi`,
+  wrDiffBeat: 'Pha ky luc the gioi! (...that khong?)',
+  roundSummaryLabel: (i, t) => `V${i} (${t}s)`,
+  totalErrorLabel: 'Tong Sai So',
+  psychRetry: 'Thu lai co tot hon khong? Du lieu cho thay trung binh cai thien 23%',
+  psychWeakness: (r, t) => `Diem yeu: Vong ${r} (${t}s) — cam nhan ${Math.floor(t)}s cua ban kem nhat. 76% nguoi thua cung sai o day`,
+  psychNextRank: (rank, diff) => `Chi con ${diff}s nua de dat ${rank}!`,
+  psychNewBest: (cur, prev, count) => `Ky luc ca nhan moi! ${cur}s (truoc: ${prev}) — ${count} lan`,
+  psychHistory: (best, rank, count, diff) => `Ky luc tot nhat: ${best}s (${rank}) — ${count} lan | chenh lech: ${diff}s`,
+  psychFirst: 'Lan dau thu thach! Lan sau se tot hon. Chac vay.',
+  shareChallengeBtn: 'Chia se & thach dau ban be',
+  retryBtn: 'Thu Lai',
+  leaderboardBtn: 'Bang Xep Hang',
+  shareHint: 'Cham chia se de copy ket qua',
+  lbTitle: 'Bang Xep Hang Toan Cau',
+  lbSub: 'TOP 20 — Tong sai so thap nhat thang',
+  lbPlaceholder: 'Biet danh (toi da 10)',
+  lbSubmitBtn: 'Gui',
+  lbLoading: 'Dang tai...',
+  lbEmpty: 'Chua co diem nao. Hay la nguoi dau tien!',
+  lbClose: 'Dong',
+  lbAnon: 'An danh',
+  lbLocalNote: 'Bang xep hang cuc bo',
+  lbSubmitting: 'Dang gui...',
+  lbSubmitted: 'Da gui diem!',
+  lbSubmittedLocal: 'Da luu diem (cuc bo)',
+  copyBtn: 'Copy Anh',
+  igBtn: 'IG Story',
+  dlBtn: 'Tai ve',
+  toastCopied: 'Da copy!',
+  toastImgCopied: 'Da copy anh!',
+  toastImgFallback: 'Khong copy duoc, dang tai ve',
+  toastImgDl: 'Da tai anh!',
+  moreGames: 'Thu Thach Khac',
+  gameColor: 'Kiem Tra Sac Giac',
+  gameColorHook: 'Chi 2.1% qua Level 25',
+  gameReaction: 'Kiem Tra Phan Xa',
+  gameReactionHook: 'Nhanh hon 273ms khong?',
+  gameMemory: 'Gioi Han Tri Nho',
+  gameMemoryHook: 'Trung binh la 7. Con ban?',
+  shareTitle: 'Phan Ngan Giay',
+  shareText: (rank, taunt, total, pct) => `\u23F1 Phan Ngan Giay — Rank ${rank}\n"${taunt}"\nTong sai so ${total}s | Vuot ${pct}%`,
+  shareChallenge: 'Ban co vuot duoc toi khong?',
+  shareCanvasSubtitle: 'Thu thach gioi han cam nhan thoi gian',
+  shareCanvasStats: (total, pct) => `Tong sai so ${total}s | Vuot ${pct}%`,
+  ogTitle: 'Phan Ngan Giay — Ban o top bao nhieu%?',
+  ogDesc: 'Chi 0.01% dat rank SSS. Thu thach cam nhan thoi gian!',
+  metaDesc: 'Chi 0.01% dat rank SSS. Cam nhan thoi gian cua ban chinh xac den dau?',
+  roundTaunts: [
+    { maxError: 0.005, msg: 'Oi... ban la bot ha? :))', color: '#ff2d55' },
+    { maxError: 0.015, msg: 'Chinh xac kha kinh lun', color: '#00ff88' },
+    { maxError: 0.030, msg: 'Cung duoc, co nang khieu do', color: '#ffd700' },
+    { maxError: 0.050, msg: 'Level nguoi binh thuong', color: '#e0e0e0' },
+    { maxError: 0.100, msg: 'Ba noi toi con lam tot hon :))', color: '#ff6b00' },
+    { maxError: 0.200, msg: 'Oi troi oi, te qua di :)))', color: '#ff2d55' },
+    { maxError: Infinity, msg: 'Nham mat bam ha? :))))', color: '#ff2d55' },
+  ],
+  resultTaunts: {
+    SSS: { main: 'Ban khong phai nguoi.', sub: 'Da bao admin kiem tra' },
+    SS:  { main: 'Nguoi Dieu Khien Thoi Gian', sub: 'Nao ban co bug roi' },
+    S:   { main: 'Top 1% di thuong', sub: 'Da so nguoi mo cung khong den day' },
+    A:   { main: 'Khong te', sub: 'Nhung con xa cao thu that su lam' },
+    B:   { main: 'Nguoi binh thuong', sub: 'Tam thuong nhu 85% nguoi khac thoi' },
+    C:   { main: 'Duoi trung binh', sub: 'Khi bam random co khi chinh xac hon :))' },
+    D:   { main: 'Phan xa dang lo', sub: 'Noi that la dang lo lun' },
+    F:   { main: 'Co nhin man hinh khong?', sub: 'Mot trong nhung diem te nhat lich su. Chuc mung? :))' },
+  },
+},
+};
+
+let currentLang = 'zh-TW';
+
+function T() { return LANG[currentLang] || LANG['zh-TW']; }
+
+function detectLang() {
+  const saved = localStorage.getItem('ms_lang');
+  if (saved && LANG[saved]) return saved;
+  const nav = (navigator.language || navigator.userLanguage || 'zh-TW');
+  // Try exact match first
+  if (LANG[nav]) return nav;
+  // Try prefix match
+  const prefix = nav.split('-')[0].toLowerCase();
+  const match = Object.keys(LANG).find(k => k.toLowerCase().startsWith(prefix));
+  return match || 'zh-TW';
+}
+
+function initLangSwitcher() {
+  const dropdown = document.getElementById('lang-dropdown');
+  dropdown.innerHTML = LANG_LIST.map(l =>
+    `<div class="lang-option" data-lang="${l.code}" onclick="switchLang('${l.code}')">${l.flag} ${l.label}</div>`
+  ).join('');
+}
+
+function toggleLangDropdown() {
+  document.getElementById('lang-dropdown').classList.toggle('open');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.lang-switcher')) {
+    document.getElementById('lang-dropdown').classList.remove('open');
+  }
+});
+
+function switchLang(code) {
+  if (!LANG[code]) return;
+  currentLang = code;
+  localStorage.setItem('ms_lang', code);
+  document.getElementById('lang-dropdown').classList.remove('open');
+  applyLang(code);
+}
+
+function applyLang(code) {
+  currentLang = code;
+  const t = LANG[code];
+  if (!t) return;
+
+  // Update lang-btn label
+  const langInfo = LANG_LIST.find(l => l.code === code);
+  if (langInfo) {
+    document.getElementById('lang-btn').textContent = langInfo.flag + ' ' + langInfo.label;
+  }
+
+  // HTML lang attr
+  document.documentElement.lang = code === 'zh-TW' ? 'zh-Hant' : code;
+
+  // Meta tags
+  document.title = t.ogTitle;
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) metaDesc.content = t.metaDesc;
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  if (ogTitle) ogTitle.content = t.ogTitle;
+  const ogDesc = document.querySelector('meta[property="og:description"]');
+  if (ogDesc) ogDesc.content = t.ogDesc;
+
+  // Start screen
+  document.querySelector('#start-screen h1').textContent = t.title;
+  document.querySelector('#start-screen .subtitle').textContent = t.subtitle;
+  document.querySelector('#start-screen .hook').textContent = t.hook;
+  const statLabels = document.querySelectorAll('#start-screen .stat-label');
+  if (statLabels[0]) statLabels[0].textContent = t.statPlayers;
+  if (statLabels[1]) statLabels[1].textContent = t.statSSS;
+
+  // World records on start screen
+  const wrStart = document.getElementById('world-records-start');
+  if (wrStart) {
+    wrStart.querySelector('h3').textContent = t.wrTitle;
+    const wrRows = wrStart.querySelectorAll('.wr-row');
+    const wrLabels = [t.wrWorld, t.wrAsia, t.wrEurope, t.wrNA, t.wrLocal];
+    wrRows.forEach((row, i) => {
+      const label = row.querySelector('.wr-label');
+      if (label && wrLabels[i]) label.textContent = wrLabels[i];
+    });
+    // Update local record row (last one)
+    if (wrRows[4]) {
+      const flag = wrRows[4].querySelector('.wr-flag');
+      const name = wrRows[4].querySelector('.wr-name');
+      const score = wrRows[4].querySelector('.wr-score');
+      if (flag) flag.innerHTML = t.wrLocalFlag;
+      if (name) name.textContent = t.wrLocalName;
+      if (score) score.textContent = t.wrLocalScore;
+    }
+  }
+
+  // Start button
+  document.querySelector('#start-screen .btn-primary').textContent = t.startBtn;
+  document.querySelector('#start-screen p:last-child').textContent = t.ruleText;
+
+  // Game screen
+  const roundInfo = document.querySelector('#game-screen .round-info');
+  if (roundInfo) {
+    const roundNum = document.getElementById('round-num').textContent;
+    roundInfo.innerHTML = t.roundLabel(roundNum);
+  }
+
+  // Difficulty labels are updated via setupRound, but update current
+  const dl = document.getElementById('diff-label');
+  if (dl && typeof currentRound !== 'undefined') {
+    dl.textContent = t.difficulty[currentRound] || t.difficulty[0];
+  }
+
+  document.querySelector('#game-screen .target-label').textContent = t.targetLabel;
+
+  // Tap hint
+  const tapHint = document.getElementById('tap-hint');
+  if (tapHint) {
+    // Only update if it's one of the known states
+    const hintMap = {
+      '點擊開始計時': t.tapStart,
+      '點擊停止！': t.tapStop,
+      '點擊進入下一輪': t.tapNext,
+      '點擊查看結果': t.tapResult,
+    };
+    // Check all languages for current hint text
+    let matched = false;
+    for (const lang of Object.values(LANG)) {
+      if (tapHint.textContent === lang.tapStart) { tapHint.textContent = t.tapStart; matched = true; break; }
+      if (tapHint.textContent === lang.tapStop) { tapHint.textContent = t.tapStop; matched = true; break; }
+      if (tapHint.textContent === lang.tapNext) { tapHint.textContent = t.tapNext; matched = true; break; }
+      if (tapHint.textContent === lang.tapResult) { tapHint.textContent = t.tapResult; matched = true; break; }
+    }
+    if (!matched) tapHint.textContent = t.tapStart;
+  }
+
+  // Error label
+  const errorLabelEl = document.querySelector('#round-result > div:first-child');
+  if (errorLabelEl) errorLabelEl.textContent = t.errorLabel;
+
+  // Result screen
+  const yourRankEl = document.querySelector('#result-screen > div:first-child');
+  if (yourRankEl) yourRankEl.textContent = t.yourRank;
+
+  const pctEl = document.querySelector('#result-screen .percentile');
+  if (pctEl) {
+    const pctVal = document.getElementById('percentile')?.textContent || '0%';
+    pctEl.innerHTML = t.beatPct(pctVal.replace('%',''));
+  }
+
+  const totalErrEl = document.querySelector('#result-screen .total-error');
+  if (totalErrEl) {
+    const val = document.getElementById('total-error')?.textContent || '0.000';
+    totalErrEl.innerHTML = `${t.totalError} <span id="total-error">${val}</span>s`;
+  }
+
+  // Share buttons
+  const shareButtons = document.getElementById('share-buttons');
+  if (shareButtons) {
+    const btns = shareButtons.querySelectorAll('.share-btn');
+    btns.forEach(btn => {
+      if (btn.classList.contains('share-btn-copy')) btn.textContent = t.copyBtn;
+      else if (btn.classList.contains('share-btn-ig')) btn.textContent = t.igBtn;
+      else if (btn.classList.contains('share-btn-download')) btn.textContent = t.dlBtn;
+    });
+  }
+
+  // Action buttons in result
+  const shareChalBtn = document.querySelector('#result-screen .btn-share');
+  if (shareChalBtn) shareChalBtn.textContent = t.shareChallengeBtn;
+
+  const btnGroup = document.querySelector('#result-screen .btn-group');
+  if (btnGroup) {
+    const btns = btnGroup.querySelectorAll('.btn-secondary');
+    if (btns[0]) btns[0].textContent = t.retryBtn;
+    if (btns[1]) btns[1].textContent = t.leaderboardBtn;
+  }
+
+  const shareTextEl = document.querySelector('#result-screen .share-text');
+  if (shareTextEl) shareTextEl.textContent = t.shareHint;
+
+  // Leaderboard
+  document.querySelector('.lb-header h2').textContent = t.lbTitle;
+  document.querySelector('.lb-header .lb-sub').textContent = t.lbSub;
+  const lbNameInput = document.getElementById('lb-name');
+  if (lbNameInput) lbNameInput.placeholder = t.lbPlaceholder;
+  const lbBtn = document.getElementById('lb-btn');
+  if (lbBtn) lbBtn.textContent = t.lbSubmitBtn;
+  const lbLoading = document.getElementById('lb-loading');
+  if (lbLoading) lbLoading.textContent = t.lbLoading;
+  const lbClose = document.querySelector('.lb-close');
+  if (lbClose) lbClose.textContent = t.lbClose;
+
+  // More games
+  const moreH3 = document.querySelector('.more-games h3');
+  if (moreH3) moreH3.innerHTML = '\uD83C\uDFAE ' + t.moreGames;
+  const gameCards = document.querySelectorAll('.game-card');
+  if (gameCards[0]) {
+    gameCards[0].querySelector('.name').textContent = t.gameColor;
+    gameCards[0].querySelector('.hook').textContent = t.gameColorHook;
+  }
+  if (gameCards[1]) {
+    gameCards[1].querySelector('.name').textContent = t.gameReaction;
+    gameCards[1].querySelector('.hook').textContent = t.gameReactionHook;
+  }
+  if (gameCards[2]) {
+    gameCards[2].querySelector('.name').textContent = t.gameMemory;
+    gameCards[2].querySelector('.hook').textContent = t.gameMemoryHook;
+  }
+}
+
+// Initialize
+initLangSwitcher();
+currentLang = detectLang();
+applyLang(currentLang);
+
 // ==================== GAME LOGIC ====================
 
 const ROUNDS = [
-  { target: 1.0,  label: '簡單',   cls: 'diff-easy' },
-  { target: 2.0,  label: '普通',   cls: 'diff-medium' },
-  { target: 3.0,  label: '困難',   cls: 'diff-hard' },
-  { target: 5.0,  label: '極限',   cls: 'diff-extreme' },
-  { target: 10.0, label: '不可能', cls: 'diff-impossible' },
+  { target: 1.0,  diffIdx: 0, cls: 'diff-easy' },
+  { target: 2.0,  diffIdx: 1, cls: 'diff-medium' },
+  { target: 3.0,  diffIdx: 2, cls: 'diff-hard' },
+  { target: 5.0,  diffIdx: 3, cls: 'diff-extreme' },
+  { target: 10.0, diffIdx: 4, cls: 'diff-impossible' },
 ];
 
 const RANKS = [
@@ -763,17 +2036,20 @@ function startGame() {
 
 function setupRound() {
   const r = ROUNDS[currentRound];
+  const t = T();
   document.getElementById('round-num').textContent = currentRound + 1;
+  document.querySelector('#game-screen .round-info').innerHTML = t.roundLabel(currentRound + 1);
   document.getElementById('target-time').textContent = r.target.toFixed(3) + 's';
   document.getElementById('timer').textContent = '0.000';
   document.getElementById('timer').className = 'timer-display mono';
-  document.getElementById('tap-hint').textContent = '點擊開始計時';
+  document.getElementById('tap-hint').textContent = t.tapStart;
   document.getElementById('round-result').classList.remove('show');
   document.getElementById('round-taunt').classList.remove('show');
   document.getElementById('round-taunt').textContent = '';
+  document.querySelector('#game-screen .target-label').textContent = t.targetLabel;
 
   const dl = document.getElementById('diff-label');
-  dl.textContent = r.label;
+  dl.textContent = t.difficulty[r.diffIdx];
   dl.className = 'diff-pill ' + r.cls;
 
   // Progress dots
@@ -803,7 +2079,7 @@ function handleTap(e) {
 function startTimer() {
   state = 'running';
   timerStart = performance.now();
-  document.getElementById('tap-hint').textContent = '點擊停止！';
+  document.getElementById('tap-hint').textContent = T().tapStop;
   document.getElementById('round-result').classList.remove('show');
   document.getElementById('round-taunt').classList.remove('show');
   updateTimer();
@@ -843,18 +2119,23 @@ function stopTimer() {
     errEl.className = 'error-display error-bad';
   }
 
-  // Show round taunt
-  const taunt = ROUND_TAUNTS.find(t => error < t.maxError) || ROUND_TAUNTS[ROUND_TAUNTS.length - 1];
+  // Show round taunt (use current language taunts)
+  const langTaunts = T().roundTaunts;
+  const taunt = langTaunts.find(t => error < t.maxError) || langTaunts[langTaunts.length - 1];
   const tauntEl = document.getElementById('round-taunt');
   tauntEl.textContent = taunt.msg;
   tauntEl.style.color = taunt.color;
+
+  // Update error label
+  document.querySelector('#round-result > div:first-child').textContent = T().errorLabel;
 
   document.getElementById('round-result').classList.add('show');
   // Small delay for taunt appearance
   setTimeout(() => tauntEl.classList.add('show'), 150);
 
+  const tt = T();
   document.getElementById('tap-hint').textContent =
-    currentRound < ROUNDS.length - 1 ? '點擊進入下一輪' : '點擊查看結果';
+    currentRound < ROUNDS.length - 1 ? tt.tapNext : tt.tapResult;
 }
 
 function nextRound() {
@@ -869,23 +2150,28 @@ function nextRound() {
 function showResult() {
   const totalError = errors.reduce((s, e) => s + e.error, 0);
   const rankInfo = RANKS.find(r => totalError < r.max) || RANKS[RANKS.length - 1];
+  const t = T();
 
   const rankEl = document.getElementById('rank');
   rankEl.textContent = rankInfo.rank;
   rankEl.className = 'rank ' + rankInfo.cls;
 
-  // Result taunt
-  const taunt = RESULT_TAUNTS[rankInfo.rank] || RESULT_TAUNTS.F;
+  // Result taunt (use current language)
+  const langTaunts = t.resultTaunts;
+  const taunt = langTaunts[rankInfo.rank] || langTaunts.F;
   document.getElementById('result-taunt-main').textContent = taunt.main;
   document.getElementById('result-taunt-sub').textContent = taunt.sub;
 
-  document.getElementById('percentile').textContent = rankInfo.pct + '%';
-  document.getElementById('total-error').textContent = totalError.toFixed(3);
+  // Your rank label
+  document.querySelector('#result-screen > div:first-child').textContent = t.yourRank;
+
+  document.querySelector('#result-screen .percentile').innerHTML = t.beatPct(rankInfo.pct);
+  document.querySelector('#result-screen .total-error').innerHTML = `${t.totalError} <span id="total-error">${totalError.toFixed(3)}</span>s`;
 
   // World record diff
   const wrDiff = totalError - FAKE_WORLD_RECORD;
   document.getElementById('world-record-diff').textContent =
-    wrDiff > 0 ? `距離世界紀錄還差 ${wrDiff.toFixed(3)}s` : '恭喜打破世界紀錄！（？）';
+    wrDiff > 0 ? t.wrDiffBehind(wrDiff.toFixed(3)) : t.wrDiffBeat;
 
   // Round summary
   const summary = document.getElementById('round-summary');
@@ -893,11 +2179,11 @@ function showResult() {
     const sign = e.elapsed >= e.target ? '+' : '-';
     const cls = e.error < 0.015 ? 'error-good' : e.error < 0.05 ? 'error-ok' : 'error-bad';
     return `<div class="round-row">
-      <span class="label">第${i+1}輪 (${e.target.toFixed(1)}s)</span>
+      <span class="label">${t.roundSummaryLabel(i+1, e.target.toFixed(1))}</span>
       <span class="${cls}">${sign}${e.error.toFixed(3)}s</span>
     </div>`;
   }).join('') + `<div class="round-row" style="border:none;font-weight:700">
-    <span>總誤差</span>
+    <span>${t.totalErrorLabel}</span>
     <span>${totalError.toFixed(3)}s</span>
   </div>`;
 
@@ -924,20 +2210,16 @@ function showResult() {
 
 function buildPsychHooks(totalError, rankInfo) {
   const hooks = document.getElementById('psych-hooks');
+  const t = T();
   let html = '';
 
   // Retry encouragement (fake stat)
-  html += `<div class="psych-retry">
-    再試一次可以更好嗎？根據數據，第二次平均進步 23%
-  </div>`;
+  html += `<div class="psych-retry">${t.psychRetry}</div>`;
 
   // Weakness analysis
   const worstIdx = errors.reduce((worst, e, i) => e.error > errors[worst].error ? i : worst, 0);
   const worstRound = errors[worstIdx];
-  html += `<div class="psych-weakness">
-    你的弱點：第 ${worstIdx + 1} 輪 (${worstRound.target.toFixed(1)}s)
-    — 你在 ${worstRound.target.toFixed(0)}s 的時間感最差，76% 的失敗者跟你一樣
-  </div>`;
+  html += `<div class="psych-weakness">${t.psychWeakness(worstIdx + 1, worstRound.target.toFixed(1))}</div>`;
 
   // Next rank distance
   const currentRankIdx = RANKS.findIndex(r => totalError < r.max);
@@ -945,9 +2227,7 @@ function buildPsychHooks(totalError, rankInfo) {
     const nextRank = RANKS[currentRankIdx - 1];
     const diff = totalError - nextRank.max;
     if (diff > 0) {
-      html += `<div class="psych-next-rank">
-        距離 ${nextRank.rank} 級只差 ${diff.toFixed(3)}s！
-      </div>`;
+      html += `<div class="psych-next-rank">${t.psychNextRank(nextRank.rank, diff.toFixed(3))}</div>`;
     }
   }
 
@@ -957,21 +2237,13 @@ function buildPsychHooks(totalError, rankInfo) {
     const best = history.reduce((b, h) => h.totalError < b.totalError ? h : b);
     const current = totalError;
     if (current <= best.totalError) {
-      html += `<div class="psych-history">
-        新個人最佳紀錄！ ${current.toFixed(3)}s (前最佳: ${best.totalError === current ? '首次' : best.totalError.toFixed(3) + 's'})
-        — 共挑戰 ${history.length} 次
-      </div>`;
+      const prevText = best.totalError === current ? (currentLang === 'zh-TW' ? '首次' : 'first') : best.totalError.toFixed(3) + 's';
+      html += `<div class="psych-history">${t.psychNewBest(current.toFixed(3), prevText, history.length)}</div>`;
     } else {
-      const improvement = ((best.totalError / current - 1) * -100).toFixed(0);
-      html += `<div class="psych-history">
-        個人最佳: ${best.totalError.toFixed(3)}s (${best.rank} 級)
-        — 共挑戰 ${history.length} 次｜本次差距 ${(current - best.totalError).toFixed(3)}s
-      </div>`;
+      html += `<div class="psych-history">${t.psychHistory(best.totalError.toFixed(3), best.rank, history.length, (current - best.totalError).toFixed(3))}</div>`;
     }
   } else {
-    html += `<div class="psych-history">
-      第一次挑戰！下一次一定能更好。
-    </div>`;
+    html += `<div class="psych-history">${t.psychFirst}</div>`;
   }
 
   hooks.innerHTML = html;
@@ -1025,16 +2297,18 @@ function generateShareImage(totalError, rankInfo, taunt, format) {
 
   const yOffset = isStory ? 240 : 0;
 
+  const t = T();
+
   // Title
   ctx.textAlign = 'center';
   ctx.font = '700 48px "Noto Sans TC", sans-serif';
   ctx.fillStyle = '#e0e0e0';
-  ctx.fillText('千分之一秒', W / 2, 80 + yOffset);
+  ctx.fillText(t.title, W / 2, 80 + yOffset);
 
   // Subtitle
   ctx.font = '400 28px "Noto Sans TC", sans-serif';
   ctx.fillStyle = '#666';
-  ctx.fillText('測試你的時間感極限', W / 2, 120 + yOffset);
+  ctx.fillText(t.shareCanvasSubtitle, W / 2, 120 + yOffset);
 
   // Rank with glow
   const rankColors = {
@@ -1066,7 +2340,7 @@ function generateShareImage(totalError, rankInfo, taunt, format) {
   // Stats line
   ctx.font = '700 32px "JetBrains Mono", monospace';
   ctx.fillStyle = '#e0e0e0';
-  ctx.fillText(`總誤差 ${totalError.toFixed(3)}s｜超越 ${rankInfo.pct}% 的人`, W / 2, 510 + yOffset);
+  ctx.fillText(t.shareCanvasStats(totalError.toFixed(3), rankInfo.pct), W / 2, 510 + yOffset);
 
   // Round breakdown
   const startY = 570 + yOffset;
@@ -1093,7 +2367,7 @@ function generateShareImage(totalError, rankInfo, taunt, format) {
   ctx.fillStyle = '#ffd700';
   const wrY = startY + errors.length * 42 + 30;
   ctx.fillText(
-    wrDiff > 0 ? `距離世界紀錄還差 ${wrDiff.toFixed(3)}s` : '打破世界紀錄！',
+    wrDiff > 0 ? t.wrDiffBehind(wrDiff.toFixed(3)) : t.wrDiffBeat,
     W / 2, wrY
   );
 
@@ -1104,7 +2378,7 @@ function generateShareImage(totalError, rankInfo, taunt, format) {
   // URL
   ctx.font = '400 22px "JetBrains Mono", monospace';
   ctx.fillStyle = '#666';
-  ctx.fillText('你能超越我嗎？', W / 2, isStory ? H - 140 : H - 30);
+  ctx.fillText(t.shareChallenge + '?', W / 2, isStory ? H - 140 : H - 30);
 
   // Border accent
   ctx.strokeStyle = rc;
@@ -1149,12 +2423,11 @@ function drawQRPattern(ctx, x, y, w, h) {
 function shareResult() {
   const totalError = errors.reduce((s, e) => s + e.error, 0);
   const rankInfo = RANKS.find(r => totalError < r.max) || RANKS[RANKS.length - 1];
-  const taunt = RESULT_TAUNTS[rankInfo.rank] || RESULT_TAUNTS.F;
+  const t = T();
+  const taunt = t.resultTaunts[rankInfo.rank] || t.resultTaunts.F;
 
   const lines = [
-    `\u23F1 千分之一秒 — ${rankInfo.rank} 級`,
-    `「${taunt.main}」`,
-    `總誤差 ${totalError.toFixed(3)}s｜超越 ${rankInfo.pct}% 的人`,
+    t.shareText(rankInfo.rank, taunt.main, totalError.toFixed(3), rankInfo.pct),
     '',
     ...errors.map((e, i) => {
       const sign = e.elapsed >= e.target ? '+' : '-';
@@ -1162,14 +2435,14 @@ function shareResult() {
       return `${icon} ${e.target.toFixed(1)}s \u2192 ${sign}${e.error.toFixed(3)}s`;
     }),
     '',
-    '你能超越我嗎？\uD83D\uDC47',
+    t.shareChallenge + '\uD83D\uDC47',
     location.href
   ];
 
   const text = lines.join('\n');
 
   if (navigator.share) {
-    navigator.share({ title: '千分之一秒', text }).catch(() => copyFallback(text));
+    navigator.share({ title: t.shareTitle, text }).catch(() => copyFallback(text));
   } else {
     copyFallback(text);
   }
@@ -1178,8 +2451,9 @@ function shareResult() {
 function shareLine() {
   const totalError = errors.reduce((s, e) => s + e.error, 0);
   const rankInfo = RANKS.find(r => totalError < r.max) || RANKS[RANKS.length - 1];
-  const taunt = RESULT_TAUNTS[rankInfo.rank] || RESULT_TAUNTS.F;
-  const text = `\u23F1 千分之一秒 ${rankInfo.rank} 級｜「${taunt.main}」｜總誤差 ${totalError.toFixed(3)}s｜超越 ${rankInfo.pct}% 的人\n你能超越我嗎？ ${location.href}`;
+  const t = T();
+  const taunt = t.resultTaunts[rankInfo.rank] || t.resultTaunts.F;
+  const text = t.shareText(rankInfo.rank, taunt.main, totalError.toFixed(3), rankInfo.pct) + '\n' + t.shareChallenge + ' ' + location.href;
   const encoded = encodeURIComponent(text);
   window.open(`https://line.me/R/share?text=${encoded}`, '_blank');
 }
@@ -1187,8 +2461,9 @@ function shareLine() {
 function shareTwitter() {
   const totalError = errors.reduce((s, e) => s + e.error, 0);
   const rankInfo = RANKS.find(r => totalError < r.max) || RANKS[RANKS.length - 1];
-  const taunt = RESULT_TAUNTS[rankInfo.rank] || RESULT_TAUNTS.F;
-  const text = `\u23F1 千分之一秒 ${rankInfo.rank} 級\n「${taunt.main}」\n總誤差 ${totalError.toFixed(3)}s｜超越 ${rankInfo.pct}%\n你能超越我嗎？`;
+  const t = T();
+  const taunt = t.resultTaunts[rankInfo.rank] || t.resultTaunts.F;
+  const text = t.shareText(rankInfo.rank, taunt.main, totalError.toFixed(3), rankInfo.pct) + '\n' + t.shareChallenge;
   const encoded = encodeURIComponent(text);
   const url = encodeURIComponent(location.href);
   window.open(`https://twitter.com/intent/tweet?text=${encoded}&url=${url}`, '_blank');
@@ -1197,7 +2472,8 @@ function shareTwitter() {
 async function copyShareImage() {
   const totalError = errors.reduce((s, e) => s + e.error, 0);
   const rankInfo = RANKS.find(r => totalError < r.max) || RANKS[RANKS.length - 1];
-  const taunt = RESULT_TAUNTS[rankInfo.rank] || RESULT_TAUNTS.F;
+  const lt = T().resultTaunts;
+  const taunt = lt[rankInfo.rank] || lt.F;
   generateShareImage(totalError, rankInfo, taunt, 'square');
   const canvas = document.getElementById('share-canvas');
   try {
@@ -1205,25 +2481,26 @@ async function copyShareImage() {
     await navigator.clipboard.write([
       new ClipboardItem({ 'image/png': blob })
     ]);
-    showToast('圖片已複製到剪貼簿！');
+    showToast(T().toastImgCopied);
   } catch (e) {
     // Fallback: download
     downloadShareImage('square');
-    showToast('瀏覽器不支援複製圖片，已改為下載');
+    showToast(T().toastImgFallback);
   }
 }
 
 function downloadShareImage(format) {
   const totalError = errors.reduce((s, e) => s + e.error, 0);
   const rankInfo = RANKS.find(r => totalError < r.max) || RANKS[RANKS.length - 1];
-  const taunt = RESULT_TAUNTS[rankInfo.rank] || RESULT_TAUNTS.F;
+  const lt = T().resultTaunts;
+  const taunt = lt[rankInfo.rank] || lt.F;
   generateShareImage(totalError, rankInfo, taunt, format);
   const canvas = document.getElementById('share-canvas');
   const link = document.createElement('a');
   link.download = `millisecond-${rankInfo.rank}-${Date.now()}.png`;
   link.href = canvas.toDataURL('image/png');
   link.click();
-  showToast('圖片已下載！');
+  showToast(T().toastImgDl);
 }
 
 function showToast(msg) {
@@ -1235,10 +2512,9 @@ function showToast(msg) {
 
 function copyFallback(text) {
   navigator.clipboard.writeText(text).then(() => {
-    showToast('已複製到剪貼簿！');
+    showToast(T().toastCopied);
   }).catch(() => {
-    // Very old browser fallback
-    prompt('複製以下文字分享：', text);
+    prompt('Copy:', text);
   });
 }
 
@@ -1332,6 +2608,7 @@ function closeLbOverlay(e) {
 function loadLeaderboard() {
   const table = document.getElementById('lb-table');
   const loading = document.getElementById('lb-loading');
+  loading.textContent = T().lbLoading;
   loading.style.display = 'block';
   table.innerHTML = '';
 
@@ -1363,17 +2640,17 @@ function loadLocalLeaderboard(table, loading) {
   loading.style.display = 'none';
   const scores = getLocalScores().sort((a, b) => a.totalError - b.totalError).slice(0, 20);
   if (scores.length === 0) {
-    table.innerHTML = '<div class="lb-empty">還沒有成績，成為第一位上榜的人！</div>';
+    table.innerHTML = `<div class="lb-empty">${T().lbEmpty}</div>`;
     return;
   }
   const entries = scores.map(s => ({ key: s._localId, ...s }));
   renderTable(table, entries);
-  setStatus('使用本機排行榜（Firebase 未設定）', '');
+  setStatus(T().lbLocalNote, '');
 }
 
 function renderTable(table, entries) {
   if (entries.length === 0) {
-    table.innerHTML = '<div class="lb-empty">還沒有成績，成為第一位上榜的人！</div>';
+    table.innerHTML = `<div class="lb-empty">${T().lbEmpty}</div>`;
     return;
   }
 
@@ -1385,7 +2662,7 @@ function renderTable(table, entries) {
     const gradeCls = getRankClass(grade);
     return `<div class="lb-row${isMe ? ' me' : ''}">
       <div class="lb-rank-col ${rankCls}">${pos}</div>
-      <div class="lb-name-col">${escapeHtml(e.name || '匿名')}</div>
+      <div class="lb-name-col">${escapeHtml(e.name || T().lbAnon)}</div>
       <div class="lb-error-col">${e.totalError.toFixed(3)}s</div>
       <div class="lb-grade-col ${gradeCls}">${grade}</div>
     </div>`;
@@ -1407,7 +2684,7 @@ function setStatus(msg, cls) {
 function submitScore() {
   const nameInput = document.getElementById('lb-name');
   const btn = document.getElementById('lb-btn');
-  const name = nameInput.value.trim().slice(0, 10) || '匿名';
+  const name = nameInput.value.trim().slice(0, 10) || T().lbAnon;
 
   // Save nickname for next time
   localStorage.setItem('ms_nickname', name);
@@ -1427,7 +2704,7 @@ function submitScore() {
   };
 
   btn.disabled = true;
-  setStatus('送出中...', '');
+  setStatus(T().lbSubmitting, '');
 
   if (firebaseReady) {
     submitFirebase(entry, btn);
@@ -1442,7 +2719,7 @@ function submitFirebase(entry, btn) {
     .then(() => {
       lastSubmittedKey = newRef.key;
       document.getElementById('lb-submit').style.display = 'none';
-      setStatus('成績已送出！', 'ok');
+      setStatus(T().lbSubmitted, 'ok');
       loadLeaderboard();
       cleanupOldScores();
     })
@@ -1456,7 +2733,7 @@ function submitLocal(entry, btn) {
   const id = addLocalScore(entry);
   lastSubmittedKey = id;
   document.getElementById('lb-submit').style.display = 'none';
-  setStatus('成績已儲存（本機）', 'ok');
+  setStatus(T().lbSubmittedLocal, 'ok');
   loadLeaderboard();
 }
 
