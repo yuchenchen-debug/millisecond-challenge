@@ -13,6 +13,7 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="og-image.svg">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4737693030554043" crossorigin="anonymous"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
@@ -313,6 +314,110 @@ body{
 }
 .lb-status.ok{color:var(--green)}
 .lb-status.err{color:var(--accent2)}
+
+/* ===== NEW: Round taunt message ===== */
+.round-taunt{
+  font-size:13px;margin-top:6px;font-weight:700;
+  opacity:0;transition:opacity .3s;
+}
+.round-taunt.show{opacity:1}
+
+/* ===== NEW: World Records section ===== */
+.world-records{
+  width:100%;max-width:360px;margin:0 auto 20px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:16px;text-align:left;
+}
+.world-records h3{
+  font-size:13px;color:var(--gold);font-weight:800;
+  margin-bottom:10px;text-align:center;
+  letter-spacing:1px;text-transform:uppercase;
+}
+.wr-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:5px 0;font-size:13px;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.wr-row:last-child{border-bottom:none}
+.wr-flag{margin-right:4px}
+.wr-name{color:var(--dim);flex:1}
+.wr-score{
+  font-family:'JetBrains Mono',monospace;font-weight:700;
+  color:var(--gold);font-size:12px;
+}
+.wr-label{font-size:11px;color:var(--dim);margin-right:8px}
+
+/* ===== NEW: Result screen taunts ===== */
+.result-taunt{
+  margin:8px 0 4px;
+}
+.result-taunt-main{
+  font-size:clamp(1.1rem,4vw,1.5rem);font-weight:900;
+  color:var(--accent2);
+}
+.result-taunt-sub{
+  font-size:clamp(0.8rem,3vw,1rem);color:var(--dim);
+  margin-top:4px;
+}
+
+.world-record-diff{
+  font-size:13px;color:var(--gold);margin:4px 0 8px;
+  font-family:'JetBrains Mono',monospace;
+}
+
+/* ===== NEW: Psychological hooks ===== */
+.psych-hooks{
+  width:100%;max-width:360px;margin:0 auto 16px;
+}
+.psych-retry{
+  background:rgba(0,240,255,.06);border:1px solid rgba(0,240,255,.15);
+  border-radius:12px;padding:12px;margin-bottom:10px;
+  font-size:13px;color:var(--accent);
+}
+.psych-weakness{
+  background:rgba(255,45,85,.06);border:1px solid rgba(255,45,85,.15);
+  border-radius:12px;padding:12px;margin-bottom:10px;
+  font-size:13px;color:var(--accent2);
+}
+.psych-next-rank{
+  background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.15);
+  border-radius:12px;padding:12px;margin-bottom:10px;
+  font-size:13px;color:var(--gold);
+}
+.psych-history{
+  background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.15);
+  border-radius:12px;padding:12px;margin-bottom:10px;
+  font-size:13px;color:var(--green);
+}
+
+/* ===== NEW: Share buttons ===== */
+.share-buttons{
+  display:flex;gap:10px;flex-wrap:wrap;justify-content:center;
+  margin:12px 0;
+}
+.share-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:10px 20px;border:none;border-radius:50px;
+  font-size:14px;font-weight:700;cursor:pointer;
+  font-family:'Noto Sans TC',sans-serif;
+  transition:transform .15s,opacity .15s;
+}
+.share-btn:active{transform:scale(.95)}
+.share-btn-line{background:#06C755;color:#fff}
+.share-btn-x{background:#000;color:#fff;border:1px solid #333}
+.share-btn-copy{background:var(--surface);color:var(--accent);border:1px solid var(--accent)}
+.share-btn-ig{
+  background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);
+  color:#fff;
+}
+.share-btn-download{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+
+/* ===== NEW: Result screen scrollable ===== */
+#result-screen{
+  overflow-y:auto;justify-content:flex-start;
+  padding-top:20px;
+  max-height:100vh;
+}
 </style>
 </head>
 <body>
@@ -334,6 +439,42 @@ body{
       <div class="stat-label">SSS 通過率</div>
     </div>
   </div>
+
+  <!-- Fake World Records -->
+  <div class="world-records" id="world-records-start">
+    <h3>世界紀錄</h3>
+    <div class="wr-row">
+      <span class="wr-label">世界</span>
+      <span class="wr-flag">&#127471;&#127477;</span>
+      <span class="wr-name">Takeshi_ms</span>
+      <span class="wr-score">0.007s</span>
+    </div>
+    <div class="wr-row">
+      <span class="wr-label">亞洲</span>
+      <span class="wr-flag">&#127472;&#127479;</span>
+      <span class="wr-name">김시간</span>
+      <span class="wr-score">0.009s</span>
+    </div>
+    <div class="wr-row">
+      <span class="wr-label">歐洲</span>
+      <span class="wr-flag">&#127465;&#127466;</span>
+      <span class="wr-name">ZeitMeister</span>
+      <span class="wr-score">0.011s</span>
+    </div>
+    <div class="wr-row">
+      <span class="wr-label">北美</span>
+      <span class="wr-flag">&#127482;&#127480;</span>
+      <span class="wr-name">msReflexGod</span>
+      <span class="wr-score">0.013s</span>
+    </div>
+    <div class="wr-row">
+      <span class="wr-label">台灣</span>
+      <span class="wr-flag">&#127481;&#127484;</span>
+      <span class="wr-name">時間之子</span>
+      <span class="wr-score">0.012s</span>
+    </div>
+  </div>
+
   <button class="btn btn-primary" onclick="startGame()">開始挑戰</button>
   <p style="color:var(--dim);font-size:12px;margin-top:20px">
     5 輪計時挑戰 — 在精確的秒數停下計時器
@@ -354,6 +495,7 @@ body{
   <div class="round-result" id="round-result">
     <div>誤差</div>
     <div class="error-display" id="error-display">+0.000s</div>
+    <div class="round-taunt" id="round-taunt"></div>
   </div>
 </div>
 
@@ -361,9 +503,30 @@ body{
 <div class="screen" id="result-screen">
   <div style="font-size:14px;color:var(--dim)">你的等級</div>
   <div class="rank" id="rank">S</div>
+  <div class="result-taunt" id="result-taunt">
+    <div class="result-taunt-main" id="result-taunt-main"></div>
+    <div class="result-taunt-sub" id="result-taunt-sub"></div>
+  </div>
   <div class="percentile">你超越了 <em id="percentile">99%</em> 的挑戰者</div>
   <div class="total-error">總誤差 <span id="total-error">0.000</span>s</div>
+  <div class="world-record-diff" id="world-record-diff"></div>
   <div class="round-summary" id="round-summary"></div>
+
+  <!-- Psychological hooks -->
+  <div class="psych-hooks" id="psych-hooks"></div>
+
+  <!-- Share image canvas (hidden) -->
+  <canvas id="share-canvas" width="1080" height="1080" style="display:none"></canvas>
+
+  <!-- Share buttons -->
+  <div class="share-buttons" id="share-buttons">
+    <button class="share-btn share-btn-line" onclick="shareLine()">LINE</button>
+    <button class="share-btn share-btn-x" onclick="shareTwitter()">&#120143;</button>
+    <button class="share-btn share-btn-copy" onclick="copyShareImage()">複製圖片</button>
+    <button class="share-btn share-btn-ig" onclick="downloadShareImage('ig')">IG 限動</button>
+    <button class="share-btn share-btn-download" onclick="downloadShareImage('square')">下載圖片</button>
+  </div>
+
   <button class="btn btn-share" onclick="shareResult()">分享成績挑戰朋友</button>
   <div class="btn-group">
     <button class="btn btn-secondary" onclick="startGame()">再挑戰一次</button>
@@ -396,8 +559,11 @@ body{
 
 <!-- AD SLOT -->
 <div class="ad-slot" id="ad-slot">
-  <!-- Replace with your AdSense code -->
-  <span style="font-size:11px">廣告位 — 整合 AdSense 後替換</span>
+  <ins class="adsbygoogle"
+    style="display:inline-block;width:320px;height:50px"
+    data-ad-client="ca-pub-4737693030554043"
+    data-ad-slot="auto"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 </div>
 
 <!-- Firebase SDK (compat mode for simplicity) -->
@@ -430,7 +596,7 @@ try {
   firebaseReady = false;
 }
 
-// ==================== GAME LOGIC (unchanged) ====================
+// ==================== GAME LOGIC ====================
 
 const ROUNDS = [
   { target: 1.0,  label: '簡單',   cls: 'diff-easy' },
@@ -450,6 +616,35 @@ const RANKS = [
   { max: 1.000, rank: 'D',   cls: 'rank-d',   pct: 30 },
   { max: Infinity, rank: 'F', cls: 'rank-f',  pct: 0 },
 ];
+
+// ==================== TAUNTING MESSAGES ====================
+
+const ROUND_TAUNTS = [
+  { maxError: 0.005, msg: '...你是機器人嗎？', color: '#ff2d55' },
+  { maxError: 0.015, msg: '變態級精準度', color: '#00ff88' },
+  { maxError: 0.030, msg: '還行，有點天賦', color: '#ffd700' },
+  { maxError: 0.050, msg: '普通人類水準', color: '#e0e0e0' },
+  { maxError: 0.100, msg: '你奶奶可能比你準', color: '#ff6b00' },
+  { maxError: 0.200, msg: '建議去醫院檢查反應力', color: '#ff2d55' },
+  { maxError: Infinity, msg: '你是閉著眼睛按的嗎？', color: '#ff2d55' },
+];
+
+const RESULT_TAUNTS = {
+  SSS: { main: '你不是人類。', sub: '已通報系統管理員審查' },
+  SS:  { main: '時間操控者', sub: '你的大腦有 bug' },
+  S:   { main: '前 1% 的異類', sub: '大部分人做夢都到不了這裡' },
+  A:   { main: '還不錯', sub: '但離真正的高手還差得遠' },
+  B:   { main: '普通人', sub: '跟其他 85% 的人一樣平庸' },
+  C:   { main: '低於平均', sub: '連猴子隨機按都可能比你準' },
+  D:   { main: '令人擔憂的反應力', sub: '認真的嗎？' },
+  F:   { main: '你確定你有在看螢幕嗎', sub: '史上最爛成績之一' },
+};
+
+// ==================== FAKE WORLD RECORDS ====================
+
+const FAKE_WORLD_RECORD = 0.007;
+
+// ==================== STATE ====================
 
 let currentRound = 0;
 let errors = [];
@@ -485,6 +680,8 @@ function setupRound() {
   document.getElementById('timer').className = 'timer-display mono';
   document.getElementById('tap-hint').textContent = '點擊開始計時';
   document.getElementById('round-result').classList.remove('show');
+  document.getElementById('round-taunt').classList.remove('show');
+  document.getElementById('round-taunt').textContent = '';
 
   const dl = document.getElementById('diff-label');
   dl.textContent = r.label;
@@ -519,6 +716,7 @@ function startTimer() {
   timerStart = performance.now();
   document.getElementById('tap-hint').textContent = '點擊停止！';
   document.getElementById('round-result').classList.remove('show');
+  document.getElementById('round-taunt').classList.remove('show');
   updateTimer();
 }
 
@@ -556,7 +754,16 @@ function stopTimer() {
     errEl.className = 'error-display error-bad';
   }
 
+  // Show round taunt
+  const taunt = ROUND_TAUNTS.find(t => error < t.maxError) || ROUND_TAUNTS[ROUND_TAUNTS.length - 1];
+  const tauntEl = document.getElementById('round-taunt');
+  tauntEl.textContent = taunt.msg;
+  tauntEl.style.color = taunt.color;
+
   document.getElementById('round-result').classList.add('show');
+  // Small delay for taunt appearance
+  setTimeout(() => tauntEl.classList.add('show'), 150);
+
   document.getElementById('tap-hint').textContent =
     currentRound < ROUNDS.length - 1 ? '點擊進入下一輪' : '點擊查看結果';
 }
@@ -578,8 +785,18 @@ function showResult() {
   rankEl.textContent = rankInfo.rank;
   rankEl.className = 'rank ' + rankInfo.cls;
 
+  // Result taunt
+  const taunt = RESULT_TAUNTS[rankInfo.rank] || RESULT_TAUNTS.F;
+  document.getElementById('result-taunt-main').textContent = taunt.main;
+  document.getElementById('result-taunt-sub').textContent = taunt.sub;
+
   document.getElementById('percentile').textContent = rankInfo.pct + '%';
   document.getElementById('total-error').textContent = totalError.toFixed(3);
+
+  // World record diff
+  const wrDiff = totalError - FAKE_WORLD_RECORD;
+  document.getElementById('world-record-diff').textContent =
+    wrDiff > 0 ? `距離世界紀錄還差 ${wrDiff.toFixed(3)}s` : '恭喜打破世界紀錄！（？）';
 
   // Round summary
   const summary = document.getElementById('round-summary');
@@ -595,28 +812,268 @@ function showResult() {
     <span>${totalError.toFixed(3)}s</span>
   </div>`;
 
+  // Psychological hooks
+  buildPsychHooks(totalError, rankInfo);
+
   // Update fake player count
   const el = document.getElementById('player-count');
   el.textContent = (fakeTotal + Math.floor(Math.random() * 50)).toLocaleString();
 
+  // Save challenge history
+  saveChallengeHistory(totalError, rankInfo.rank);
+
+  // Generate share image
+  generateShareImage(totalError, rankInfo, taunt);
+
   showScreen('result-screen');
+
+  // Scroll result screen to top
+  document.getElementById('result-screen').scrollTop = 0;
 }
+
+// ==================== PSYCHOLOGICAL HOOKS ====================
+
+function buildPsychHooks(totalError, rankInfo) {
+  const hooks = document.getElementById('psych-hooks');
+  let html = '';
+
+  // Retry encouragement (fake stat)
+  html += `<div class="psych-retry">
+    再試一次可以更好嗎？根據數據，第二次平均進步 23%
+  </div>`;
+
+  // Weakness analysis
+  const worstIdx = errors.reduce((worst, e, i) => e.error > errors[worst].error ? i : worst, 0);
+  const worstRound = errors[worstIdx];
+  html += `<div class="psych-weakness">
+    你的弱點：第 ${worstIdx + 1} 輪 (${worstRound.target.toFixed(1)}s)
+    — 你在 ${worstRound.target.toFixed(0)}s 的時間感最差，76% 的失敗者跟你一樣
+  </div>`;
+
+  // Next rank distance
+  const currentRankIdx = RANKS.findIndex(r => totalError < r.max);
+  if (currentRankIdx > 0) {
+    const nextRank = RANKS[currentRankIdx - 1];
+    const diff = totalError - nextRank.max;
+    if (diff > 0) {
+      html += `<div class="psych-next-rank">
+        距離 ${nextRank.rank} 級只差 ${diff.toFixed(3)}s！
+      </div>`;
+    }
+  }
+
+  // Personal history
+  const history = getChallengeHistory();
+  if (history.length > 1) {
+    const best = history.reduce((b, h) => h.totalError < b.totalError ? h : b);
+    const current = totalError;
+    if (current <= best.totalError) {
+      html += `<div class="psych-history">
+        新個人最佳紀錄！ ${current.toFixed(3)}s (前最佳: ${best.totalError === current ? '首次' : best.totalError.toFixed(3) + 's'})
+        — 共挑戰 ${history.length} 次
+      </div>`;
+    } else {
+      const improvement = ((best.totalError / current - 1) * -100).toFixed(0);
+      html += `<div class="psych-history">
+        個人最佳: ${best.totalError.toFixed(3)}s (${best.rank} 級)
+        — 共挑戰 ${history.length} 次｜本次差距 ${(current - best.totalError).toFixed(3)}s
+      </div>`;
+    }
+  } else {
+    html += `<div class="psych-history">
+      第一次挑戰！下一次一定能更好。
+    </div>`;
+  }
+
+  hooks.innerHTML = html;
+}
+
+// ==================== CHALLENGE HISTORY ====================
+
+function getChallengeHistory() {
+  try {
+    return JSON.parse(localStorage.getItem('ms_challenge_history') || '[]');
+  } catch { return []; }
+}
+
+function saveChallengeHistory(totalError, rank) {
+  const history = getChallengeHistory();
+  history.push({
+    totalError: Math.round(totalError * 1000) / 1000,
+    rank,
+    timestamp: Date.now(),
+    rounds: errors.map(e => ({ target: e.target, error: Math.round(e.error * 1000) / 1000 }))
+  });
+  // Keep last 100
+  if (history.length > 100) history.splice(0, history.length - 100);
+  localStorage.setItem('ms_challenge_history', JSON.stringify(history));
+}
+
+// ==================== SHARE IMAGE (Canvas) ====================
+
+function generateShareImage(totalError, rankInfo, taunt, format) {
+  const isStory = format === 'ig';
+  const W = 1080;
+  const H = isStory ? 1920 : 1080;
+  const canvas = document.getElementById('share-canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle grid pattern
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += 40) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  const yOffset = isStory ? 240 : 0;
+
+  // Title
+  ctx.textAlign = 'center';
+  ctx.font = '700 48px "Noto Sans TC", sans-serif';
+  ctx.fillStyle = '#e0e0e0';
+  ctx.fillText('千分之一秒', W / 2, 80 + yOffset);
+
+  // Subtitle
+  ctx.font = '400 28px "Noto Sans TC", sans-serif';
+  ctx.fillStyle = '#666';
+  ctx.fillText('測試你的時間感極限', W / 2, 120 + yOffset);
+
+  // Rank with glow
+  const rankColors = {
+    SSS: '#ffd700', SS: '#ffd700', S: '#ff6b00',
+    A: '#00ff88', B: '#00f0ff', C: '#e0e0e0', D: '#666', F: '#ff2d55'
+  };
+  const rc = rankColors[rankInfo.rank] || '#e0e0e0';
+
+  ctx.save();
+  ctx.shadowColor = rc;
+  ctx.shadowBlur = 80;
+  ctx.font = '900 220px "JetBrains Mono", monospace';
+  ctx.fillStyle = rc;
+  ctx.fillText(rankInfo.rank, W / 2, 330 + yOffset);
+  ctx.shadowBlur = 40;
+  ctx.fillText(rankInfo.rank, W / 2, 330 + yOffset);
+  ctx.restore();
+
+  // Taunt main
+  ctx.font = '900 36px "Noto Sans TC", sans-serif';
+  ctx.fillStyle = '#ff2d55';
+  ctx.fillText(taunt.main, W / 2, 400 + yOffset);
+
+  // Taunt sub
+  ctx.font = '400 24px "Noto Sans TC", sans-serif';
+  ctx.fillStyle = '#666';
+  ctx.fillText(taunt.sub, W / 2, 440 + yOffset);
+
+  // Stats line
+  ctx.font = '700 32px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#e0e0e0';
+  ctx.fillText(`總誤差 ${totalError.toFixed(3)}s｜超越 ${rankInfo.pct}% 的人`, W / 2, 510 + yOffset);
+
+  // Round breakdown
+  const startY = 570 + yOffset;
+  ctx.font = '400 26px "JetBrains Mono", monospace';
+  errors.forEach((e, i) => {
+    const sign = e.elapsed >= e.target ? '+' : '-';
+    const icon = e.error < 0.015 ? '\u2705' : e.error < 0.05 ? '\u2611' : '\u274C';
+    const color = e.error < 0.015 ? '#00ff88' : e.error < 0.05 ? '#ffd700' : '#ff2d55';
+    const y = startY + i * 42;
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#666';
+    ctx.fillText(`R${i + 1}  ${e.target.toFixed(1)}s`, 200, y);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = color;
+    ctx.fillText(`${sign}${e.error.toFixed(3)}s`, 880, y);
+  });
+
+  // World record diff
+  const wrDiff = totalError - FAKE_WORLD_RECORD;
+  ctx.textAlign = 'center';
+  ctx.font = '400 24px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#ffd700';
+  const wrY = startY + errors.length * 42 + 30;
+  ctx.fillText(
+    wrDiff > 0 ? `距離世界紀錄還差 ${wrDiff.toFixed(3)}s` : '打破世界紀錄！',
+    W / 2, wrY
+  );
+
+  // QR-like pattern at bottom
+  const qrY = isStory ? H - 280 : H - 160;
+  drawQRPattern(ctx, W / 2 - 60, qrY, 120, 120);
+
+  // URL
+  ctx.font = '400 22px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#666';
+  ctx.fillText('你能超越我嗎？', W / 2, isStory ? H - 140 : H - 30);
+
+  // Border accent
+  ctx.strokeStyle = rc;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(20, 20, W - 40, H - 40);
+}
+
+function drawQRPattern(ctx, x, y, w, h) {
+  const cellSize = 6;
+  const cols = Math.floor(w / cellSize);
+  const rows = Math.floor(h / cellSize);
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  // Seeded random from a simple hash
+  let seed = 42;
+  function pseudoRandom() {
+    seed = (seed * 16807 + 0) % 2147483647;
+    return seed / 2147483647;
+  }
+  // Draw corner markers
+  const drawCorner = (cx, cy) => {
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillRect(cx, cy, cellSize * 3, cellSize * 3);
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fillRect(cx + cellSize, cy + cellSize, cellSize, cellSize);
+  };
+  drawCorner(x, y);
+  drawCorner(x + w - cellSize * 3, y);
+  drawCorner(x, y + h - cellSize * 3);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (pseudoRandom() > 0.55) {
+        ctx.fillRect(x + c * cellSize, y + r * cellSize, cellSize - 1, cellSize - 1);
+      }
+    }
+  }
+}
+
+// ==================== SHARE FUNCTIONS ====================
 
 function shareResult() {
   const totalError = errors.reduce((s, e) => s + e.error, 0);
   const rankInfo = RANKS.find(r => totalError < r.max) || RANKS[RANKS.length - 1];
+  const taunt = RESULT_TAUNTS[rankInfo.rank] || RESULT_TAUNTS.F;
 
   const lines = [
-    `⏱ 千分之一秒 — ${rankInfo.rank} 級`,
+    `\u23F1 千分之一秒 — ${rankInfo.rank} 級`,
+    `「${taunt.main}」`,
     `總誤差 ${totalError.toFixed(3)}s｜超越 ${rankInfo.pct}% 的人`,
     '',
     ...errors.map((e, i) => {
       const sign = e.elapsed >= e.target ? '+' : '-';
-      const icon = e.error < 0.015 ? '🎯' : e.error < 0.05 ? '✅' : '❌';
-      return `${icon} ${e.target.toFixed(1)}s → ${sign}${e.error.toFixed(3)}s`;
+      const icon = e.error < 0.015 ? '\uD83C\uDFAF' : e.error < 0.05 ? '\u2705' : '\u274C';
+      return `${icon} ${e.target.toFixed(1)}s \u2192 ${sign}${e.error.toFixed(3)}s`;
     }),
     '',
-    '你能超越我嗎？👇',
+    '你能超越我嗎？\uD83D\uDC47',
     location.href
   ];
 
@@ -629,11 +1086,67 @@ function shareResult() {
   }
 }
 
+function shareLine() {
+  const totalError = errors.reduce((s, e) => s + e.error, 0);
+  const rankInfo = RANKS.find(r => totalError < r.max) || RANKS[RANKS.length - 1];
+  const taunt = RESULT_TAUNTS[rankInfo.rank] || RESULT_TAUNTS.F;
+  const text = `\u23F1 千分之一秒 ${rankInfo.rank} 級｜「${taunt.main}」｜總誤差 ${totalError.toFixed(3)}s｜超越 ${rankInfo.pct}% 的人\n你能超越我嗎？ ${location.href}`;
+  const encoded = encodeURIComponent(text);
+  window.open(`https://line.me/R/share?text=${encoded}`, '_blank');
+}
+
+function shareTwitter() {
+  const totalError = errors.reduce((s, e) => s + e.error, 0);
+  const rankInfo = RANKS.find(r => totalError < r.max) || RANKS[RANKS.length - 1];
+  const taunt = RESULT_TAUNTS[rankInfo.rank] || RESULT_TAUNTS.F;
+  const text = `\u23F1 千分之一秒 ${rankInfo.rank} 級\n「${taunt.main}」\n總誤差 ${totalError.toFixed(3)}s｜超越 ${rankInfo.pct}%\n你能超越我嗎？`;
+  const encoded = encodeURIComponent(text);
+  const url = encodeURIComponent(location.href);
+  window.open(`https://twitter.com/intent/tweet?text=${encoded}&url=${url}`, '_blank');
+}
+
+async function copyShareImage() {
+  const totalError = errors.reduce((s, e) => s + e.error, 0);
+  const rankInfo = RANKS.find(r => totalError < r.max) || RANKS[RANKS.length - 1];
+  const taunt = RESULT_TAUNTS[rankInfo.rank] || RESULT_TAUNTS.F;
+  generateShareImage(totalError, rankInfo, taunt, 'square');
+  const canvas = document.getElementById('share-canvas');
+  try {
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': blob })
+    ]);
+    showToast('圖片已複製到剪貼簿！');
+  } catch (e) {
+    // Fallback: download
+    downloadShareImage('square');
+    showToast('瀏覽器不支援複製圖片，已改為下載');
+  }
+}
+
+function downloadShareImage(format) {
+  const totalError = errors.reduce((s, e) => s + e.error, 0);
+  const rankInfo = RANKS.find(r => totalError < r.max) || RANKS[RANKS.length - 1];
+  const taunt = RESULT_TAUNTS[rankInfo.rank] || RESULT_TAUNTS.F;
+  generateShareImage(totalError, rankInfo, taunt, format);
+  const canvas = document.getElementById('share-canvas');
+  const link = document.createElement('a');
+  link.download = `millisecond-${rankInfo.rank}-${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast('圖片已下載！');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
 function copyFallback(text) {
   navigator.clipboard.writeText(text).then(() => {
-    const toast = document.getElementById('toast');
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2000);
+    showToast('已複製到剪貼簿！');
   }).catch(() => {
     // Very old browser fallback
     prompt('複製以下文字分享：', text);
