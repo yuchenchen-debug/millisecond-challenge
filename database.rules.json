@@ -1,0 +1,33 @@
+{
+  "rules": {
+    ".read": true,
+    "scores": {
+      ".write": true,
+      ".indexOn": ["totalError"],
+      "$score": {
+        ".validate": "newData.hasChildren(['name','totalError','rank','timestamp'])"
+      }
+    },
+    "color-scores": {
+      ".write": true,
+      ".indexOn": ["score"],
+      "$entry": {
+        ".validate": "newData.hasChildren(['name','score','rank','timestamp'])"
+      }
+    },
+    "reaction-scores": {
+      ".write": true,
+      ".indexOn": ["avgMs"],
+      "$entry": {
+        ".validate": "newData.hasChildren(['name','avgMs','rank','timestamp'])"
+      }
+    },
+    "memory-scores": {
+      ".write": true,
+      ".indexOn": ["score"],
+      "$entry": {
+        ".validate": "newData.hasChildren(['name','score','rank','timestamp'])"
+      }
+    }
+  }
+}

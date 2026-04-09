@@ -608,6 +608,39 @@ body.scrollable{justify-content:flex-start}
   </div>
 </div>
 
+<!-- MORE GAMES -->
+<style>
+.more-games{width:100%;max-width:600px;margin:20px auto;padding:0 16px}
+.more-games h3{font-size:14px;color:#666;text-align:center;margin-bottom:12px}
+.more-games-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.more-games-row::-webkit-scrollbar{display:none}
+.game-card{flex:0 0 160px;padding:14px;border-radius:14px;background:#12121a;border:1px solid #1e1e2e;text-decoration:none;color:#e0e0e0;transition:border-color .2s,transform .15s}
+.game-card:hover{border-color:#00f0ff;transform:translateY(-2px)}
+.game-card .emoji{font-size:28px;display:block;margin-bottom:6px}
+.game-card .name{font-size:14px;font-weight:700;margin-bottom:4px}
+.game-card .hook{font-size:11px;color:#666;line-height:1.3}
+</style>
+<div class="more-games">
+  <h3>🎮 更多挑戰</h3>
+  <div class="more-games-row">
+    <a class="game-card" href="https://yuchenchen-debug.github.io/color-iq-test/">
+      <span class="emoji">🎨</span>
+      <div class="name">色覺測試</div>
+      <div class="hook">只有 2.1% 通過 Level 25</div>
+    </a>
+    <a class="game-card" href="https://yuchenchen-debug.github.io/reaction-test/">
+      <span class="emoji">⚡</span>
+      <div class="name">反應力測試</div>
+      <div class="hook">你比 273ms 更快嗎？</div>
+    </a>
+    <a class="game-card" href="https://yuchenchen-debug.github.io/memory-limit/">
+      <span class="emoji">🧠</span>
+      <div class="name">記憶極限</div>
+      <div class="hook">一般人記住 7 個，你呢？</div>
+    </a>
+  </div>
+</div>
+
 <!-- AD SLOT -->
 <div class="ad-slot" id="ad-slot">
   <ins class="adsbygoogle"
